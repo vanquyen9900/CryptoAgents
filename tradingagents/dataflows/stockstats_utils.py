@@ -34,6 +34,14 @@ def yf_retry(func, max_retries=3, base_delay=2.0):
 
 def _clean_dataframe(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize a stock DataFrame for stockstats: parse dates, drop invalid rows, fill price gaps."""
+    # Normalize the date column name: yfinance reset_index() names it 'index',
+    # older cache files may also have 'Datetime' or 'index'.
+    if "Date" not in data.columns:
+        for candidate in ("index", "Datetime", "date"):
+            if candidate in data.columns:
+                data = data.rename(columns={candidate: "Date"})
+                break
+
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
     data = data.dropna(subset=["Date"])
 
@@ -83,6 +91,13 @@ def load_ohlcv(symbol: str, curr_date: str) -> pd.DataFrame:
             auto_adjust=True,
         ))
         data = data.reset_index()
+        # Ensure the date column is always saved as 'Date' regardless of what
+        # yfinance names it after reset_index() (e.g. 'index', 'Datetime').
+        if "Date" not in data.columns:
+            for candidate in ("index", "Datetime", "date"):
+                if candidate in data.columns:
+                    data = data.rename(columns={candidate: "Date"})
+                    break
         data.to_csv(data_file, index=False, encoding="utf-8")
 
     data = _clean_dataframe(data)
@@ -130,4 +145,11 @@ class StockstatsUtils:
             indicator_value = matching_rows[indicator].values[0]
             return indicator_value
         else:
+            # Fall back to the most recent preceding day's value (critical for crypto & 24/7 data alignment)
+            curr_date_dt = pd.to_datetime(curr_date)
+            df['Date_dt'] = pd.to_datetime(df['Date'])
+            preceding_rows = df[df["Date_dt"] <= curr_date_dt]
+            if not preceding_rows.empty:
+                indicator_value = preceding_rows.iloc[-1][indicator]
+                return indicator_value
             return "N/A: Not a trading day (weekend or holiday)"

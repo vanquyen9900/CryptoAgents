@@ -153,7 +153,13 @@ def get_stock_stats_indicators_window(
             if date_str in indicator_data:
                 indicator_value = indicator_data[date_str]
             else:
-                indicator_value = "N/A: Not a trading day (weekend or holiday)"
+                # Fallback: find the most recent preceding date available in the bulk indicator dictionary
+                preceding_dates = [d for d in indicator_data.keys() if d < date_str]
+                if preceding_dates:
+                    preceding_dates.sort()
+                    indicator_value = indicator_data[preceding_dates[-1]]
+                else:
+                    indicator_value = "N/A: Not a trading day (weekend or holiday)"
             
             date_values.append((date_str, indicator_value))
             current_dt = current_dt - relativedelta(days=1)
@@ -245,11 +251,18 @@ def get_stockstats_indicator(
     return str(indicator_value)
 
 
+def is_crypto_symbol(symbol: str) -> bool:
+    normalized = symbol.strip().upper()
+    return normalized.endswith(("-USD", "-USDT", "-USDC", "-BTC", "-ETH"))
+
+
 def get_fundamentals(
     ticker: Annotated[str, "ticker symbol of the company"],
     curr_date: Annotated[str, "current date (not used for yfinance)"] = None
 ):
     """Get company fundamentals overview from yfinance."""
+    if is_crypto_symbol(ticker):
+        return f"Corporate fundamental metrics (fundamentals, sector, industry) are not applicable for the cryptocurrency {ticker.upper()}. Please refer to quantitative indicators, market dynamics, and sentiment reports."
     try:
         ticker_obj = yf.Ticker(ticker.upper())
         info = yf_retry(lambda: ticker_obj.info)
@@ -308,6 +321,8 @@ def get_balance_sheet(
     curr_date: Annotated[str, "current date in YYYY-MM-DD format"] = None
 ):
     """Get balance sheet data from yfinance."""
+    if is_crypto_symbol(ticker):
+        return f"Corporate balance sheets are not applicable for the cryptocurrency {ticker.upper()}."
     try:
         ticker_obj = yf.Ticker(ticker.upper())
 
@@ -340,6 +355,8 @@ def get_cashflow(
     curr_date: Annotated[str, "current date in YYYY-MM-DD format"] = None
 ):
     """Get cash flow data from yfinance."""
+    if is_crypto_symbol(ticker):
+        return f"Corporate cash flows are not applicable for the cryptocurrency {ticker.upper()}."
     try:
         ticker_obj = yf.Ticker(ticker.upper())
 
@@ -372,6 +389,8 @@ def get_income_statement(
     curr_date: Annotated[str, "current date in YYYY-MM-DD format"] = None
 ):
     """Get income statement data from yfinance."""
+    if is_crypto_symbol(ticker):
+        return f"Corporate income statements are not applicable for the cryptocurrency {ticker.upper()}."
     try:
         ticker_obj = yf.Ticker(ticker.upper())
 
@@ -402,6 +421,8 @@ def get_insider_transactions(
     ticker: Annotated[str, "ticker symbol of the company"]
 ):
     """Get insider transactions data from yfinance."""
+    if is_crypto_symbol(ticker):
+        return f"Corporate insider transactions are not applicable for the cryptocurrency {ticker.upper()}."
     try:
         ticker_obj = yf.Ticker(ticker.upper())
         data = yf_retry(lambda: ticker_obj.insider_transactions)

@@ -97,6 +97,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
         "technical_indicators": "yfinance",  # Options: alpha_vantage, yfinance
         "fundamental_data": "yfinance",      # Options: alpha_vantage, yfinance
         "news_data": "yfinance",             # Options: alpha_vantage, yfinance
+        "quantitative_analysis": "yfinance", # TensorFlow models routed via yfinance OHLCV
     },
     # Tool-level configuration (takes precedence over category-level)
     "tool_vendors": {
@@ -117,6 +118,12 @@ DEFAULT_CONFIG = _apply_env_overrides({
         ".L":   "^FTSE",    # London (FTSE 100)
         ".TO":  "^GSPTSE",  # Toronto (TSX Composite)
         ".AX":  "^AXJO",    # Australia (ASX 200)
+        # Crypto pairs: benchmark against BTC-USD as the dominant market indicator
+        "-USD":  "BTC-USD",  # USD-paired crypto (ETH-USD, SOL-USD, BNB-USD, ...)
+        "-USDT": "BTC-USD",  # USDT-paired crypto
+        "-USDC": "BTC-USD",  # USDC-paired crypto
+        "-BTC":  "BTC-USD",  # BTC-paired altcoins
+        "-ETH":  "BTC-USD",  # ETH-paired tokens
         "":     "SPY",      # default for US-listed tickers (no suffix)
     },
 })

@@ -37,9 +37,10 @@ class GraphSetup:
         Args:
             selected_analysts (list): List of analyst types to include. Options are:
                 - "market": Market analyst
-                - "social": Social media analyst
+                - "social": Social/Sentiment media analyst
                 - "news": News analyst
-                - "fundamentals": Fundamentals analyst
+                - "fundamentals": Fundamentals analyst (stocks)
+                - "quantitative": Quantitative & On-Chain analyst (crypto, TensorFlow)
         """
         plan = build_analyst_execution_plan(
             selected_analysts,
@@ -51,6 +52,7 @@ class GraphSetup:
             "social": lambda: create_sentiment_analyst(self.quick_thinking_llm),
             "news": lambda: create_news_analyst(self.quick_thinking_llm),
             "fundamentals": lambda: create_fundamentals_analyst(self.quick_thinking_llm),
+            "quantitative": lambda: create_quantitative_analyst(self.quick_thinking_llm),
         }
 
         # Create researcher and manager nodes

@@ -36,7 +36,9 @@ from tradingagents.agents.utils.agent_utils import (
     get_income_statement,
     get_news,
     get_insider_transactions,
-    get_global_news
+    get_global_news,
+    get_anomaly_signals,
+    get_trend_predictions,
 )
 
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
@@ -187,6 +189,13 @@ class TradingAgentsGraph:
                     get_balance_sheet,
                     get_cashflow,
                     get_income_statement,
+                ]
+            ),
+            "quantitative": ToolNode(
+                [
+                    # TensorFlow deep learning quantitative tools
+                    get_anomaly_signals,
+                    get_trend_predictions,
                 ]
             ),
         }

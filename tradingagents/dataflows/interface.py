@@ -11,6 +11,7 @@ from .y_finance import (
     get_insider_transactions as get_yfinance_insider_transactions,
 )
 from .yfinance_news import get_news_yfinance, get_global_news_yfinance
+from .quantitative_models import get_anomaly_signals, get_trend_predictions
 from .alpha_vantage import (
     get_stock as get_alpha_vantage_stock,
     get_indicator as get_alpha_vantage_indicator,
@@ -56,6 +57,13 @@ TOOLS_CATEGORIES = {
             "get_news",
             "get_global_news",
             "get_insider_transactions",
+        ]
+    },
+    "quantitative_analysis": {
+        "description": "TensorFlow deep learning quantitative analytics",
+        "tools": [
+            "get_anomaly_signals",
+            "get_trend_predictions"
         ]
     }
 }
@@ -106,6 +114,13 @@ VENDOR_METHODS = {
     "get_insider_transactions": {
         "alpha_vantage": get_alpha_vantage_insider_transactions,
         "yfinance": get_yfinance_insider_transactions,
+    },
+    # quantitative_analysis
+    "get_anomaly_signals": {
+        "yfinance": get_anomaly_signals,
+    },
+    "get_trend_predictions": {
+        "yfinance": get_trend_predictions,
     },
 }
 
