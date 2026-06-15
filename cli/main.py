@@ -30,14 +30,14 @@ from tradingagents.graph.analyst_execution import (
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
-from cli.announcements import fetch_announcements, display_announcements
+
 from cli.stats_handler import StatsCallbackHandler
 
 console = Console()
 
 app = typer.Typer(
-    name="TradingAgents",
-    help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
+    name="CryptoAgents",
+    help="CryptoAgents: AI-Powered Crypto & Stock Trading Analysis",
     add_completion=True,  # Enable shell completion
 )
 
@@ -470,28 +470,20 @@ def get_user_selections():
 
     # Create welcome box content
     welcome_content = f"{welcome_ascii}\n"
-    welcome_content += "[bold green]TradingAgents: Multi-Agents LLM Financial Trading Framework - CLI[/bold green]\n\n"
+    welcome_content += "[bold green]CryptoAgents: AI-Powered Crypto & Stock Trading Analysis[/bold green]\n\n"
     welcome_content += "[bold]Workflow Steps:[/bold]\n"
-    welcome_content += "I. Analyst Team → II. Research Team → III. Trader → IV. Risk Management → V. Portfolio Management\n\n"
-    welcome_content += (
-        "[dim]Built by [Tauric Research](https://github.com/TauricResearch)[/dim]"
-    )
+    welcome_content += "I. Analyst Team → II. Research Team → III. Trader → IV. Risk Management → V. Portfolio Management\n"
 
     # Create and center the welcome box
     welcome_box = Panel(
         welcome_content,
         border_style="green",
         padding=(1, 2),
-        title="Welcome to TradingAgents",
-        subtitle="Multi-Agents LLM Financial Trading Framework",
+        title="Welcome to CryptoAgents",
+        subtitle="AI-Powered Trading Analysis",
     )
     console.print(Align.center(welcome_box))
     console.print()
-    console.print()  # Add vertical space before announcements
-
-    # Fetch and display announcements (silent on failure)
-    announcements = fetch_announcements()
-    display_announcements(console, announcements)
 
     # Create a boxed questionnaire for each step
     def create_question_box(title, prompt, default=None):
@@ -501,19 +493,38 @@ def get_user_selections():
             box_content += f"\n[dim]Default: {default}[/dim]"
         return Panel(box_content, border_style="blue", padding=(1, 2))
 
-    # Step 1: Ticker symbol
+    # Step 1: Asset type selection
     console.print(
         create_question_box(
-            "Step 1: Ticker Symbol",
-            "Enter the exact ticker symbol to analyze, including exchange suffix when needed (examples: SPY, CNC.TO, 7203.T, 0700.HK)",
-            "SPY",
+            "Step 1: Asset Type",
+            "Select the type of asset to analyze",
         )
     )
-    selected_ticker = get_ticker()
-    asset_type = detect_asset_type(selected_ticker)
-    console.print(
-        f"[green]Detected asset type:[/green] {asset_type.value}"
-    )
+    asset_choice = questionary.select(
+        "Select Asset Type:",
+        choices=[
+            questionary.Choice("Crypto (BTC-USD)", "crypto"),
+            questionary.Choice("Stock (enter ticker)", "stock"),
+        ],
+        style=questionary.Style([
+            ("selected", "fg:green noinherit"),
+            ("highlighted", "fg:green noinherit"),
+            ("pointer", "fg:green noinherit"),
+        ]),
+    ).ask()
+
+    if asset_choice is None:
+        console.print("\n[red]No asset type selected. Exiting...[/red]")
+        raise typer.Exit(1)
+
+    if asset_choice == "crypto":
+        selected_ticker = "BTC-USD"
+        asset_type = AssetType.CRYPTO
+        console.print(f"[green]Selected:[/green] BTC-USD (Crypto)")
+    else:
+        selected_ticker = get_ticker()
+        asset_type = detect_asset_type(selected_ticker)
+        console.print(f"[green]Selected:[/green] {selected_ticker} ({asset_type.value})")
 
     # Step 2: Analysis date
     default_date = datetime.datetime.now().strftime("%Y-%m-%d")
