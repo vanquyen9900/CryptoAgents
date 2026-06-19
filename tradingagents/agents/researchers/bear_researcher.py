@@ -12,7 +12,7 @@ def create_bear_researcher(llm):
         sentiment_report = state["sentiment_report"]
         news_report = state["news_report"]
         fundamentals_report = state["fundamentals_report"]
-        quantitative_report = state.get("quantitative_report", "")
+        regime_report = state.get("regime_report", "")
         asset_type = state.get("asset_type", "stock")
         target_label = "stock" if asset_type == "stock" else "asset"
         fundamentals_label = (
@@ -20,9 +20,9 @@ def create_bear_researcher(llm):
             if asset_type == "stock"
             else "Asset fundamentals report (may be unavailable for crypto)"
         )
-        quantitative_section = (
-            f"\nQuantitative & On-Chain analysis (TensorFlow anomaly detection + trend forecast): {quantitative_report}"
-            if quantitative_report
+        regime_section = (
+            f"\nMarket regime analysis (TensorFlow HMM Bull/Bear/Sideway detection): {regime_report}"
+            if regime_report
             else ""
         )
 
@@ -30,9 +30,9 @@ def create_bear_researcher(llm):
 
 Key points to focus on:
 
-- Risks and Challenges: Highlight factors like market saturation, financial instability, anomaly signals, or macroeconomic threats that could hinder the asset's performance.
+- Risks and Challenges: Highlight factors like market saturation, financial instability, bearish regime signals, elevated risk condition, or macroeconomic threats that could hinder the asset's performance.
 - Competitive Weaknesses: Emphasize vulnerabilities such as weaker market positioning, declining adoption, or threats from competitors.
-- Negative Indicators: Use evidence from quantitative model outputs (anomaly flags, low-confidence trend forecasts), market trends, or recent adverse news to support your position.
+- Negative Indicators: Use evidence from the regime detector, market trends, or recent adverse news to support your position.
 - Bull Counterpoints: Critically analyze the bull argument with specific data and sound reasoning, exposing weaknesses or over-optimistic assumptions.
 - Engagement: Present your argument in a conversational style, directly engaging with the bull analyst's points and debating effectively rather than simply listing facts.
 
@@ -41,7 +41,7 @@ Resources available:
 Market research report: {market_research_report}
 Social media sentiment report: {sentiment_report}
 Latest world affairs news: {news_report}
-{fundamentals_label}: {fundamentals_report}{quantitative_section}
+{fundamentals_label}: {fundamentals_report}{regime_section}
 Conversation history of the debate: {history}
 Last bull argument: {current_response}
 Use this information to deliver a compelling bear argument, refute the bull's claims, and engage in a dynamic debate that demonstrates the risks and weaknesses of investing in the {target_label}.

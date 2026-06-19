@@ -37,8 +37,7 @@ from tradingagents.agents.utils.agent_utils import (
     get_news,
     get_insider_transactions,
     get_global_news,
-    get_anomaly_signals,
-    get_trend_predictions,
+    get_market_regime,
 )
 
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
@@ -193,9 +192,8 @@ class TradingAgentsGraph:
             ),
             "quantitative": ToolNode(
                 [
-                    # TensorFlow deep learning quantitative tools
-                    get_anomaly_signals,
-                    get_trend_predictions,
+                    # TensorFlow HMM market regime detection
+                    get_market_regime,
                 ]
             ),
         }

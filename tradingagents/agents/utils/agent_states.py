@@ -57,7 +57,8 @@ class AgentState(MessagesState):
         str, "Report from the News Researcher of current world affairs"
     ]
     fundamentals_report: Annotated[str, "Report from the Fundamentals Researcher"]
-    quantitative_report: Annotated[str, "Report from the Quantitative & On-Chain Analyst (TensorFlow anomaly + trend forecast)"]
+    regime_report: Annotated[str, "Report from the Regime Analyst (TensorFlow HMM Bull/Bear/Sideway detection)"]
+    quantitative_report: Annotated[str, "Deprecated compatibility field for old quantitative reports"]
 
     # researcher team discussion step
     investment_debate_state: Annotated[
