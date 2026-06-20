@@ -15,8 +15,6 @@ the LLM is invoked and injects them into the prompt as structured blocks:
 
 The agent does not use tool-calling; the data is in the prompt from
 turn 0. The LLM produces the sentiment report in a single invocation.
-
-See: https://github.com/TauricResearch/TradingAgents/issues/557
 """
 
 from datetime import datetime, timedelta

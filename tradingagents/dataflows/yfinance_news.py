@@ -79,14 +79,25 @@ def get_news_yfinance(
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
+        # Check if any news articles fall in the date range first
+        has_matching_date = False
+        for article in news:
+            data = _extract_article_data(article)
+            if data["pub_date"]:
+                pub_date_naive = data["pub_date"].replace(tzinfo=None)
+                if start_dt <= pub_date_naive <= end_dt + relativedelta(days=1):
+                    has_matching_date = True
+                    break
+
         news_str = ""
         filtered_count = 0
+        is_fallback = not has_matching_date
 
         for article in news:
             data = _extract_article_data(article)
 
-            # Filter by date if publish time is available
-            if data["pub_date"]:
+            # Filter by date if publish time is available and we have matching dates
+            if data["pub_date"] and not is_fallback:
                 pub_date_naive = data["pub_date"].replace(tzinfo=None)
                 if not (start_dt <= pub_date_naive <= end_dt + relativedelta(days=1)):
                     continue
@@ -102,7 +113,8 @@ def get_news_yfinance(
         if filtered_count == 0:
             return f"No news found for {ticker} between {start_date} and {end_date}"
 
-        return f"## {ticker} News, from {start_date} to {end_date}:\n\n{news_str}"
+        header = f"## {ticker} News (Fallback: showing latest news, requested range {start_date} to {end_date}):\n\n" if is_fallback else f"## {ticker} News, from {start_date} to {end_date}:\n\n"
+        return f"{header}{news_str}"
 
     except Exception as e:
         return f"Error fetching news for {ticker}: {str(e)}"

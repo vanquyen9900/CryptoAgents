@@ -173,7 +173,8 @@ class TestDataflowsWorkflowEndToEnd:
                 # Verify that yfinance is configured for each tool in VENDOR_METHODS
                 assert "yfinance" in VENDOR_METHODS[tool_name], f"yfinance missing for {tool_name}."
                 # Verify that alpha_vantage is configured for each tool in VENDOR_METHODS
-                assert "alpha_vantage" in VENDOR_METHODS[tool_name], f"alpha_vantage missing for {tool_name}."
+                if category != "quantitative_analysis":
+                    assert "alpha_vantage" in VENDOR_METHODS[tool_name], f"alpha_vantage missing for {tool_name}."
 
     def test_routing_flow_for_fundamental_tools(self):
         """Validate routing works correctly for all fundamental statement APIs."""

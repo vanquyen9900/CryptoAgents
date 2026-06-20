@@ -12,7 +12,12 @@ from tradingagents.dataflows.config import get_config, set_config
 @pytest.mark.unit
 class DataflowsConfigIsolationTests(unittest.TestCase):
     def setUp(self):
-        set_config(copy.deepcopy(default_config.DEFAULT_CONFIG))
+        import tradingagents.dataflows.config as df_config
+        df_config._config = copy.deepcopy(default_config.DEFAULT_CONFIG)
+
+    def tearDown(self):
+        import tradingagents.dataflows.config as df_config
+        df_config._config = copy.deepcopy(default_config.DEFAULT_CONFIG)
 
     def test_get_config_returns_deep_copy(self):
         cfg = get_config()

@@ -19,6 +19,7 @@ ANALYST_ORDER = [
     ("Sentiment Analyst", AnalystType.SOCIAL),
     ("News Analyst", AnalystType.NEWS),
     ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
+    ("Quantitative Analyst", AnalystType.QUANTITATIVE),
 ]
 
 CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
@@ -27,8 +28,8 @@ CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
 def get_ticker() -> str:
     """Prompt the user to enter a ticker symbol."""
     ticker = questionary.text(
-        f"Enter the exact ticker symbol to analyze ({TICKER_INPUT_EXAMPLES}):",
-        validate=lambda x: len(x.strip()) > 0 or "Please enter a valid ticker symbol.",
+        f"Nhập mã ticker cổ phiếu cần phân tích / Enter stock ticker ({TICKER_INPUT_EXAMPLES}):",
+        validate=lambda x: len(x.strip()) > 0 or "Vui lòng nhập mã ticker hợp lệ. / Please enter a valid ticker symbol.",
         style=questionary.Style(
             [
                 ("text", "fg:green"),
@@ -38,7 +39,7 @@ def get_ticker() -> str:
     ).ask()
 
     if not ticker:
-        console.print("\n[red]No ticker symbol provided. Exiting...[/red]")
+        console.print("\n[red]Không có mã ticker nào được cung cấp. Đang thoát... / No ticker symbol provided. Exiting...[/red]")
         exit(1)
 
     return normalize_ticker_symbol(ticker)
@@ -59,13 +60,18 @@ def detect_asset_type(ticker: str) -> AssetType:
 def filter_analysts_for_asset_type(
     analysts: List[AnalystType], asset_type: AssetType
 ) -> List[AnalystType]:
-    if asset_type != AssetType.CRYPTO:
-        return analysts
-    return [
-        analyst
-        for analyst in analysts
-        if analyst != AnalystType.FUNDAMENTALS
-    ]
+    if asset_type == AssetType.CRYPTO:
+        return [
+            analyst
+            for analyst in analysts
+            if analyst != AnalystType.FUNDAMENTALS
+        ]
+    else:
+        return [
+            analyst
+            for analyst in analysts
+            if analyst != AnalystType.QUANTITATIVE
+        ]
 
 
 def get_analysis_date() -> str:
@@ -190,9 +196,9 @@ def select_openrouter_model() -> str:
         choices=choices,
         instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
         style=questionary.Style([
-            ("selected", "fg:magenta noinherit"),
-            ("highlighted", "fg:magenta noinherit"),
-            ("pointer", "fg:magenta noinherit"),
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
         ]),
     ).ask()
 
@@ -233,9 +239,9 @@ def _select_model(provider: str, mode: str) -> str:
         instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
         style=questionary.Style(
             [
-                ("selected", "fg:magenta noinherit"),
-                ("highlighted", "fg:magenta noinherit"),
-                ("pointer", "fg:magenta noinherit"),
+                ("selected", "fg:cyan noinherit"),
+                ("highlighted", "fg:cyan noinherit"),
+                ("pointer", "fg:cyan noinherit"),
             ]
         ),
     ).ask()
@@ -265,18 +271,8 @@ def select_llm_provider() -> tuple[str, str | None]:
     # (convention from the broader Ollama ecosystem); falls back to the
     # localhost default when unset.
     ollama_url = os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434/v1"
-    # (display_name, provider_key, base_url)
     PROVIDERS = [
-        ("OpenAI", "openai", "https://api.openai.com/v1"),
         ("Google", "google", None),
-        ("Anthropic", "anthropic", "https://api.anthropic.com/"),
-        ("xAI", "xai", "https://api.x.ai/v1"),
-        ("DeepSeek", "deepseek", "https://api.deepseek.com"),
-        ("Qwen", "qwen", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
-        ("GLM", "glm", "https://open.bigmodel.cn/api/paas/v4/"),
-        ("MiniMax", "minimax", "https://api.minimax.io/v1"),
-        ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
-        ("Azure OpenAI", "azure", None),
         ("Ollama", "ollama", ollama_url),
     ]
 
@@ -289,9 +285,9 @@ def select_llm_provider() -> tuple[str, str | None]:
         instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
         style=questionary.Style(
             [
-                ("selected", "fg:magenta noinherit"),
-                ("highlighted", "fg:magenta noinherit"),
-                ("pointer", "fg:magenta noinherit"),
+                ("selected", "fg:cyan noinherit"),
+                ("highlighted", "fg:cyan noinherit"),
+                ("pointer", "fg:cyan noinherit"),
             ]
         ),
     ).ask()
@@ -520,10 +516,10 @@ def ensure_api_key(provider: str) -> Optional[str]:
 def ask_output_language() -> str:
     """Ask for report output language."""
     choice = questionary.select(
-        "Select Output Language:",
+        "Chọn ngôn ngữ hiển thị báo cáo / Select Output Language:",
         choices=[
-            questionary.Choice("English (default)", "English"),
-            questionary.Choice("Tiếng Việt (Vietnamese)", "Vietnamese"),
+            questionary.Choice("Tiếng Việt (Mặc định / Default)", "Vietnamese"),
+            questionary.Choice("English (Tiếng Anh)", "English"),
         ],
         style=questionary.Style([
             ("selected", "fg:yellow noinherit"),
