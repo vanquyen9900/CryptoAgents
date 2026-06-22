@@ -164,7 +164,7 @@ def evaluate_model(model_name: str, limit: int = None):
                     {"role": "user", "content": user_content}
                 ],
                 temperature=0.2,
-                max_tokens=1500
+                max_tokens=3000
             )
             
             latency_ms = int((time.time() - t0) * 1000)
