@@ -1,6 +1,8 @@
 import os
 
+_CRYPTOAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".cryptoagents")
 _TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
+_HOME = _CRYPTOAGENTS_HOME if (os.path.exists(_CRYPTOAGENTS_HOME) or not os.path.exists(_TRADINGAGENTS_HOME)) else _TRADINGAGENTS_HOME
 
 # Single source of truth for env-var → config-key overrides. To expose
 # a new config key for environment-based override, add a row here — no
@@ -32,9 +34,10 @@ def _coerce(value: str, reference):
 
 
 def _apply_env_overrides(config: dict) -> dict:
-    """Apply TRADINGAGENTS_* env vars to the config dict in-place."""
+    """Apply CRYPTOAGENTS_* or TRADINGAGENTS_* env vars to the config dict in-place."""
     for env_var, key in _ENV_OVERRIDES.items():
-        raw = os.environ.get(env_var)
+        new_env_var = env_var.replace("TRADINGAGENTS_", "CRYPTOAGENTS_")
+        raw = os.environ.get(new_env_var) or os.environ.get(env_var)
         if raw is None or raw == "":
             continue
         config[key] = _coerce(raw, config.get(key))
@@ -43,9 +46,9 @@ def _apply_env_overrides(config: dict) -> dict:
 
 DEFAULT_CONFIG = _apply_env_overrides({
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
-    "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", os.path.join(_TRADINGAGENTS_HOME, "logs")),
-    "data_cache_dir": os.getenv("TRADINGAGENTS_CACHE_DIR", os.path.join(_TRADINGAGENTS_HOME, "cache")),
-    "memory_log_path": os.getenv("TRADINGAGENTS_MEMORY_LOG_PATH", os.path.join(_TRADINGAGENTS_HOME, "memory", "trading_memory.md")),
+    "results_dir": os.getenv("CRYPTOAGENTS_RESULTS_DIR") or os.getenv("TRADINGAGENTS_RESULTS_DIR") or os.path.join(_HOME, "logs"),
+    "data_cache_dir": os.getenv("CRYPTOAGENTS_CACHE_DIR") or os.getenv("TRADINGAGENTS_CACHE_DIR") or os.path.join(_HOME, "cache"),
+    "memory_log_path": os.getenv("CRYPTOAGENTS_MEMORY_LOG_PATH") or os.getenv("TRADINGAGENTS_MEMORY_LOG_PATH") or os.path.join(_HOME, "memory", "trading_memory.md"),
     # Optional cap on the number of resolved memory log entries. When set,
     # the oldest resolved entries are pruned once this limit is exceeded.
     # Pending entries are never pruned. None disables rotation entirely.
@@ -69,7 +72,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
     "checkpoint_enabled": False,
     # Output language for analyst reports and final decision
     # Internal agent debate stays in English for reasoning quality
-    "output_language": "English",
+    "output_language": "Vietnamese",
     # Debate and discussion settings
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,

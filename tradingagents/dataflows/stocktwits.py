@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 logger = logging.getLogger(__name__)
 
 _API = "https://api.stocktwits.com/api/2/streams/symbol/{ticker}.json"
-_UA = "tradingagents/0.2 (+https://github.com/TauricResearch/TradingAgents)"
+_UA = "python:cryptoagents.dataflow:v1.0.0 (by /u/cryptoagents_bot)"
 
 
 def fetch_stocktwits_messages(ticker: str, limit: int = 30, timeout: float = 10.0) -> str:

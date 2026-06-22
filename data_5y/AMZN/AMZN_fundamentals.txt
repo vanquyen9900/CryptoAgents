@@ -1,0 +1,30 @@
+# Company Fundamentals for AMZN
+# Data retrieved on: 2026-06-20 23:11:39
+
+Name: Amazon.com, Inc.
+Sector: Consumer Cyclical
+Industry: Internet Retail
+Market Cap: 2628929978368
+PE Ratio (TTM): 31.656736
+Forward PE: 24.786106
+PEG Ratio: 1.83
+Price to Book: 5.947242
+EPS (TTM): 7.72
+Forward EPS: 9.85996
+Beta: 1.444
+52 Week High: 278.56
+52 Week Low: 196.0
+50 Day Average: 257.1002
+200 Day Average: 232.80365
+Revenue (TTM): 742775980032
+Gross Profit: 375875010560
+EBITDA: 155860992000
+Net Income: 90797998080
+Profit Margin: 0.12224
+Operating Margin: 0.1314
+Return on Equity: 0.24285
+Return on Assets: 0.06845
+Debt to Equity: 53.3
+Current Ratio: 1.177
+Book Value: 41.093
+Free Cash Flow: 9806624768

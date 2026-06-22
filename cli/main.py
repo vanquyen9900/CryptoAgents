@@ -19,6 +19,12 @@ from rich.tree import Tree
 from rich import box
 from rich.align import Align
 from rich.rule import Rule
+import sys
+
+# Ensure local imports take precedence over installed site-packages
+project_root = str(Path(__file__).resolve().parent.parent)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.graph.analyst_execution import (
@@ -272,10 +278,10 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     # Header with welcome message
     layout["header"].update(
         Panel(
-            "[bold green]Welcome to TradingAgents CLI[/bold green]\n"
-            "[dim]© [Tauric Research](https://github.com/TauricResearch)[/dim]",
-            title="Welcome to TradingAgents",
-            border_style="green",
+            "[bold cyan]Welcome to CryptoAgents CLI[/bold cyan]\n"
+            "[dim]© CryptoAgents[/dim]",
+            title="Welcome to CryptoAgents",
+            border_style="cyan",
             padding=(1, 2),
             expand=True,
         )
@@ -284,7 +290,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     # Progress panel showing agent status
     progress_table = Table(
         show_header=True,
-        header_style="bold magenta",
+        header_style="bold cyan",
         show_footer=False,
         box=box.SIMPLE_HEAD,  # Use simple header with horizontal lines
         title=None,  # Remove the redundant Progress title
@@ -292,8 +298,8 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         expand=True,  # Make table expand to fill available space
     )
     progress_table.add_column("Team", style="cyan", justify="center", width=20)
-    progress_table.add_column("Agent", style="green", justify="center", width=20)
-    progress_table.add_column("Status", style="yellow", justify="center", width=20)
+    progress_table.add_column("Agent", style="yellow", justify="center", width=20)
+    progress_table.add_column("Status", style="cyan", justify="center", width=20)
 
     # Group agents by team - filter to only include agents in agent_status
     all_teams = {
@@ -302,6 +308,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             "Sentiment Analyst",
             "News Analyst",
             "Fundamentals Analyst",
+            "Regime Analyst",
         ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
         "Trading Team": ["Trader"],
@@ -328,7 +335,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         else:
             status_color = {
                 "pending": "yellow",
-                "completed": "green",
+                "completed": "cyan",
                 "error": "red",
             }.get(status, "white")
             status_cell = f"[{status_color}]{status}[/{status_color}]"
@@ -345,7 +352,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             else:
                 status_color = {
                     "pending": "yellow",
-                    "completed": "green",
+                    "completed": "cyan",
                     "error": "red",
                 }.get(status, "white")
                 status_cell = f"[{status_color}]{status}[/{status_color}]"
@@ -361,7 +368,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     # Messages panel showing recent messages and tool calls
     messages_table = Table(
         show_header=True,
-        header_style="bold magenta",
+        header_style="bold cyan",
         show_footer=False,
         expand=True,  # Make table expand to fill available space
         box=box.MINIMAL,  # Use minimal box style for a lighter look
@@ -369,7 +376,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         padding=(0, 1),  # Add some padding between columns
     )
     messages_table.add_column("Time", style="cyan", width=8, justify="center")
-    messages_table.add_column("Type", style="green", width=10, justify="center")
+    messages_table.add_column("Type", style="yellow", width=10, justify="center")
     messages_table.add_column(
         "Content", style="white", no_wrap=False, ratio=1
     )  # Make content column expand
@@ -408,7 +415,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         Panel(
             messages_table,
             title="Messages & Tools",
-            border_style="blue",
+            border_style="cyan",
             padding=(1, 2),
         )
     )
@@ -419,7 +426,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             Panel(
                 Markdown(message_buffer.current_report),
                 title="Current Report",
-                border_style="green",
+                border_style="cyan",
                 padding=(1, 2),
             )
         )
@@ -428,7 +435,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             Panel(
                 "[italic]Waiting for analysis report...[/italic]",
                 title="Current Report",
-                border_style="green",
+                border_style="cyan",
                 padding=(1, 2),
             )
         )
@@ -483,14 +490,14 @@ def get_user_selections():
 
     # Create welcome box content
     welcome_content = f"{welcome_ascii}\n"
-    welcome_content += "[bold green]CryptoAgents: AI-Powered Crypto & Stock Trading Analysis[/bold green]\n\n"
+    welcome_content += "[bold cyan]CryptoAgents: AI-Powered Crypto & Stock Trading Analysis[/bold cyan]\n\n"
     welcome_content += "[bold]Workflow Steps:[/bold]\n"
     welcome_content += "I. Analyst Team → II. Research Team → III. Trader → IV. Risk Management → V. Portfolio Management\n"
 
     # Create and center the welcome box
     welcome_box = Panel(
         welcome_content,
-        border_style="green",
+        border_style="cyan",
         padding=(1, 2),
         title="Welcome to CryptoAgents",
         subtitle="AI-Powered Trading Analysis",
@@ -504,40 +511,41 @@ def get_user_selections():
         box_content += f"[dim]{prompt}[/dim]"
         if default:
             box_content += f"\n[dim]Default: {default}[/dim]"
-        return Panel(box_content, border_style="blue", padding=(1, 2))
+        return Panel(box_content, border_style="cyan", padding=(1, 2))
 
     # Step 1: Asset type selection
     console.print(
         create_question_box(
-            "Step 1: Asset Type",
-            "Select the type of asset to analyze",
+            "Bước 1: Loại tài sản / Step 1: Asset Type",
+            "Chọn loại tài sản để phân tích / Select the type of asset to analyze",
         )
     )
     asset_choice = questionary.select(
-        "Select Asset Type:",
+        "Chọn loại tài sản / Select Asset Type:",
         choices=[
-            questionary.Choice("Crypto (BTC-USD)", "crypto"),
-            questionary.Choice("Stock (enter ticker)", "stock"),
+            questionary.Choice("Tiền điện tử / Crypto (BTC-USD)", "crypto"),
+            questionary.Choice("Cổ phiếu / Stock (nhập ticker)", "stock"),
         ],
         style=questionary.Style([
-            ("selected", "fg:green noinherit"),
-            ("highlighted", "fg:green noinherit"),
-            ("pointer", "fg:green noinherit"),
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
         ]),
     ).ask()
 
     if asset_choice is None:
-        console.print("\n[red]No asset type selected. Exiting...[/red]")
+        console.print("\n[red]Không có loại tài sản nào được chọn. Đang thoát... / No asset type selected. Exiting...[/red]")
         raise typer.Exit(1)
 
     if asset_choice == "crypto":
         selected_ticker = "BTC-USD"
         asset_type = AssetType.CRYPTO
-        console.print(f"[green]Selected:[/green] BTC-USD (Crypto)")
+        console.print(f"[green]Đã chọn / Selected:[/green] BTC-USD (Tiền điện tử / Crypto)")
     else:
         selected_ticker = get_ticker()
         asset_type = detect_asset_type(selected_ticker)
-        console.print(f"[green]Selected:[/green] {selected_ticker} ({asset_type.value})")
+        asset_label = "Cổ phiếu / Stock" if asset_type == AssetType.STOCK else "Tiền điện tử / Crypto"
+        console.print(f"[green]Đã chọn / Selected:[/green] {selected_ticker} ({asset_label})")
 
     # Step 2: Analysis date
     default_date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -668,7 +676,7 @@ def get_ticker():
     # typer.prompt strips trailing dot-suffixes on some shells (e.g. 000404.SH
     # collapses to 000404). questionary.text reads the raw line.
     ticker = questionary.text(
-        "",
+        "Nhập mã ticker cổ phiếu cần phân tích (ví dụ: AAPL, TSLA) / Enter stock ticker:",
         validate=lambda value: (
             not value.strip()
             or (
@@ -676,11 +684,11 @@ def get_ticker():
                 and len(value.strip()) <= 32
             )
         )
-        or "Please enter a valid ticker symbol, e.g. AAPL, 000404.SZ, 0700.HK.",
+        or "Vui lòng nhập mã ticker hợp lệ (ví dụ: AAPL, 000404.SZ). / Please enter a valid ticker symbol.",
     ).ask()
 
     if ticker is None:
-        console.print("\n[red]No ticker symbol provided. Exiting...[/red]")
+        console.print("\n[red]Không có mã ticker nào được cung cấp. Đang thoát... / No ticker symbol provided. Exiting...[/red]")
         raise typer.Exit(1)
 
     return (ticker.strip() or "SPY").upper()
