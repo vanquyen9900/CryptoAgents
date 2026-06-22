@@ -2,7 +2,7 @@
 # Build command:
 #   ollama create sentiment-analyst-ft -f finetune/config/Modelfile
 
-FROM ../models/gguf/unsloth.Q4_K_M.gguf
+FROM ../models/gguf_gguf/qwen3-4b.Q4_K_M-001.gguf
 
 # Hyperparameters
 PARAMETER temperature 0.2
