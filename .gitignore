@@ -221,3 +221,6 @@ __marimo__/
 # Local generated reports
 reports/
 
+# Temporary A/B benchmark workspaces
+.regime-benchmark-*/
+
