@@ -1,8 +1,8 @@
-# Báo cáo phương pháp DataLake: MeMo Adapt Q1/2024
+# Báo cáo phương pháp MemoAdapt: MeMo Adapt Q1/2024
 
 ## 1. Mục tiêu
 
-`DataLake` là bộ dữ liệu và harness thực nghiệm dùng để đánh giá việc kết hợp kiểu suy luận multi-agent của TradingAgents với cơ chế thích nghi bộ nhớ của MeMo.
+`MemoAdapt` là bộ dữ liệu và harness thực nghiệm dùng để đánh giá việc kết hợp kiểu suy luận multi-agent của TradingAgents với cơ chế thích nghi bộ nhớ của MeMo.
 
 Câu hỏi chính:
 
@@ -19,7 +19,7 @@ Kết quả trong báo cáo không phải lời khuyên đầu tư. Đây là be
 
 | Thành phần | Giá trị |
 |---|---|
-| Test split | `DataLake/data_test_2024_q1` |
+| Test split | `MemoAdapt/data_test_2024_q1` |
 | Giai đoạn đánh giá | `2024-01-02` đến `2024-03-29` |
 | Mã cổ phiếu | `AAPL`, `AMZN`, `GOOGL` |
 | Tournament | `tour_2024_q1_eval` |
@@ -44,9 +44,9 @@ crawl/normalize data
 Các lệnh chạy chính:
 
 ```powershell
-python DataLake/run_test_2024_q1_crawl.py --skip-crawl
-python DataLake/run_q1_2024_experiment.py
-python DataLake/run_q1_2024_experiment.py --arm EVAL
+python MemoAdapt/run_test_2024_q1_crawl.py --skip-crawl
+python MemoAdapt/run_q1_2024_experiment.py
+python MemoAdapt/run_q1_2024_experiment.py --arm EVAL
 ```
 
 ## 3. Các arm so sánh và trạng thái artifact
@@ -223,14 +223,14 @@ Vì vậy, kết quả nên được đọc như một trade-off: memory giúp a
 Validation trước và sau khi chạy:
 
 ```powershell
-python DataLake/tools/health/check_test_split_health.py
-python DataLake/tools/contracts/test_memo_q1_real_artifact_contract.py --data-dir DataLake/data_test_2024_q1 --tournament-id tour_2024_q1_eval --symbols AAPL AMZN GOOGL
-python DataLake/tools/contracts/test_memo_portfolio_evaluation_contract.py --data-dir DataLake/data_test_2024_q1 --tournament-id tour_2024_q1_eval --start-date 2024-01-02 --end-date 2024-03-29 --symbols AAPL AMZN GOOGL
-python DataLake/tools/contracts/test_memo_decision_ledger_contract.py
+python MemoAdapt/tools/health/check_test_split_health.py
+python MemoAdapt/tools/contracts/test_memo_q1_real_artifact_contract.py --data-dir MemoAdapt/data_test_2024_q1 --tournament-id tour_2024_q1_eval --symbols AAPL AMZN GOOGL
+python MemoAdapt/tools/contracts/test_memo_portfolio_evaluation_contract.py --data-dir MemoAdapt/data_test_2024_q1 --tournament-id tour_2024_q1_eval --start-date 2024-01-02 --end-date 2024-03-29 --symbols AAPL AMZN GOOGL
+python MemoAdapt/tools/contracts/test_memo_decision_ledger_contract.py
 ```
 
 Quy tắc báo cáo:
 
-- Chỉ dùng `DataLake/data_test_2024_q1` làm canonical Q1 split.
+- Chỉ dùng `MemoAdapt/data_test_2024_q1` làm canonical Q1 split.
 - Không dùng output mock/demo làm research result.
 - Không recreate `data_test_2024_q1_armB` hay `data_test_2024_q1_armC`.

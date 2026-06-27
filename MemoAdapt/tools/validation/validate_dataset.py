@@ -1,8 +1,8 @@
-"""Validate the DataLake outputs after crawler/builder runs.
+"""Validate the MemoAdapt outputs after crawler/builder runs.
 
 Usage:
-    python DataLake/tools/validation/validate_dataset.py
-    python DataLake/tools/validation/validate_dataset.py --strict-optional
+    python MemoAdapt/tools/validation/validate_dataset.py
+    python MemoAdapt/tools/validation/validate_dataset.py --strict-optional
 
 The validator is intentionally standalone: it uses only pandas/pyarrow/json from
 the existing project dependencies and does not require pytest. Core datasets
@@ -490,7 +490,7 @@ class Validator:
         return self.report()
 
     def report(self) -> int:
-        print("\nDataLake validation report")
+        print("\nMemoAdapt validation report")
         print("=" * 32)
         for result in self.results:
             detail = f" - {result.detail}" if result.detail else ""
@@ -504,7 +504,7 @@ class Validator:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate DataLake outputs.")
+    parser = argparse.ArgumentParser(description="Validate MemoAdapt outputs.")
     parser.add_argument(
         "--strict-optional",
         action="store_true",

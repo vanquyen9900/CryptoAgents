@@ -429,7 +429,7 @@ def main() -> None:
     parser.add_argument(
         "--data-dir",
         default=None,
-        help="Optional override for the test data directory. If not provided, defaults to DataLake/data_test_2024_q1.",
+        help="Optional override for the test data directory. If not provided, defaults to MemoAdapt/data_test_2024_q1.",
     )
     parser.add_argument(
         "--prompt-set-ids",

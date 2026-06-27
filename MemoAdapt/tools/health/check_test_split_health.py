@@ -2,7 +2,7 @@
 
 Run after run_test_2024_q1_crawl.py completes.
 
-  python DataLake/tools/health/check_test_split_health.py
+  python MemoAdapt/tools/health/check_test_split_health.py
 """
 import os, sys, json
 os.environ["PYTHONIOENCODING"] = "utf-8"

@@ -1,8 +1,8 @@
 """Strict validation for the MeMo adaptation dataset.
 
 Usage:
-    python DataLake/tools/validation/validate_memo_adaptation_dataset.py
-    python DataLake/tools/validation/validate_memo_adaptation_dataset.py --max-jsonl-rows 0
+    python MemoAdapt/tools/validation/validate_memo_adaptation_dataset.py
+    python MemoAdapt/tools/validation/validate_memo_adaptation_dataset.py --max-jsonl-rows 0
 
 This validator is intentionally standalone. It validates the dataset layer used
 to prepare the combined MeMo + TradingAgents adaptation dataset:
@@ -710,7 +710,7 @@ class Validator:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate phase-1 DataLake MeMo adaptation input/run-plan dataset."
+        description="Validate phase-1 MemoAdapt MeMo adaptation input/run-plan dataset."
     )
     parser.add_argument(
         "--max-jsonl-rows",

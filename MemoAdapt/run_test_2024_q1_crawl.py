@@ -6,10 +6,10 @@ if _sys.stdout.encoding != "utf-8":
 
 Isolation strategy
 ------------------
-All crawlers and builders write to ``DataLake/data_test_2024_q1`` instead of
-the default ``DataLake/data``.  This is achieved by monkey-patching the global
+All crawlers and builders write to ``MemoAdapt/data_test_2024_q1`` instead of
+the default ``MemoAdapt/data``.  This is achieved by monkey-patching the global
 ``DATA_DIR`` in every module that captures it at import time.  The training data
-under ``DataLake/data`` is never touched.
+under ``MemoAdapt/data`` is never touched.
 
 Date ranges
 -----------
@@ -27,7 +27,7 @@ Usage
 -----
   conda activate tradingagents
   cd c:\\FPT_Uni\\SU26\\DAT
-  python DataLake/run_test_2024_q1_crawl.py [--skip-crawl] [--skip-build]
+  python MemoAdapt/run_test_2024_q1_crawl.py [--skip-crawl] [--skip-build]
 
 Options
 -------
@@ -190,7 +190,7 @@ def _write_manifest() -> None:
         "context_policy_id": CONTEXT_POLICY_ID,
         "generated_at": pd.Timestamp.utcnow().isoformat(),
         "notes": [
-            "This split is isolated from DataLake/data — training data is never overwritten.",
+            "This split is isolated from MemoAdapt/data — training data is never overwritten.",
             "OHLCV/calendar run from 2023-01-01 to provide SMA-200 warmup and 20d label buffer.",
             "News/social crawled from 2023-12-01 to satisfy look-back windows on 2024-01-02.",
             "Do NOT use this split to train memory banks or tune prompts.",
@@ -346,7 +346,7 @@ def _dry_run(skip_crawl: bool, skip_build: bool) -> None:
         print("  STEP 11 : episode_builder            (from snapshots)")
         print("  STEP 12 : materialize_inputs         ctx_paper_aligned_v1")
     print(f"\nAll output -> {TEST_DATA_DIR}")
-    print("Training data under DataLake/data is NOT touched.")
+    print("Training data under MemoAdapt/data is NOT touched.")
 
 
 # ---------------------------------------------------------------------------
@@ -405,7 +405,7 @@ def run(skip_crawl: bool = False, skip_build: bool = False, dry_run: bool = Fals
     print(f"  {TEST_DATA_DIR}")
     print()
     print("Verify with:")
-    print(f"  python DataLake/tools/health/check_test_split_health.py")
+    print(f"  python MemoAdapt/tools/health/check_test_split_health.py")
     print("=" * 60)
 
 

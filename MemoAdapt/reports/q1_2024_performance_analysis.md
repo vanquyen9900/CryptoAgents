@@ -1,6 +1,6 @@
 # Phân tích hiệu suất đầu tư Q1/2024
 
-Tài liệu này tóm tắt benchmark Q1/2024 của `DataLake` cho ba mã `AAPL`, `GOOGL` và `AMZN`. Mục tiêu là so sánh agent không dùng memory với agent dùng MeMo memory/weekly learning, trong cùng điều kiện offline point-in-time.
+Tài liệu này tóm tắt benchmark Q1/2024 của `MemoAdapt` cho ba mã `AAPL`, `GOOGL` và `AMZN`. Mục tiêu là so sánh agent không dùng memory với agent dùng MeMo memory/weekly learning, trong cùng điều kiện offline point-in-time.
 
 ## 1. Bảng benchmark thị trường
 

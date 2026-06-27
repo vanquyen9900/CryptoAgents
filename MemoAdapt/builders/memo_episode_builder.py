@@ -59,7 +59,7 @@ def build_episodes():
                 "analysis_time": analysis_time_str,
                 "known_time_cutoff": analysis_time_str,
                 "input_id": f"{ticker}_{analysis_time_str}_v0.1",
-                "input_path": "DataLake/data/memo_adaptation/materialized_inputs/inputs.jsonl",
+                "input_path": "MemoAdapt/data/memo_adaptation/materialized_inputs/inputs.jsonl",
 
                 "target_workflow": "tradingagents",
                 "target_agents": [

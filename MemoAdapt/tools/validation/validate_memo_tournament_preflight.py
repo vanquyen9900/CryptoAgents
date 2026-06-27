@@ -8,9 +8,9 @@ This validator is intentionally different from validate_memo_tournament_dataset.
 - It fails if mock "succeeded" trajectories are mixed into the real output path.
 
 Usage:
-    python DataLake/tools/validation/validate_memo_tournament_preflight.py
-    python DataLake/tools/validation/validate_memo_tournament_preflight.py --require-dry-run-output
-    python DataLake/tools/validation/validate_memo_tournament_preflight.py --allow-mock-artifacts
+    python MemoAdapt/tools/validation/validate_memo_tournament_preflight.py
+    python MemoAdapt/tools/validation/validate_memo_tournament_preflight.py --require-dry-run-output
+    python MemoAdapt/tools/validation/validate_memo_tournament_preflight.py --allow-mock-artifacts
 """
 
 from __future__ import annotations
@@ -375,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--require-dry-run-output",
         action="store_true",
-        help="Require DataLake/data/memo_adaptation/dry_runs/latest_dry_run.json.",
+        help="Require MemoAdapt/data/memo_adaptation/dry_runs/latest_dry_run.json.",
     )
     parser.add_argument(
         "--allow-mock-artifacts",

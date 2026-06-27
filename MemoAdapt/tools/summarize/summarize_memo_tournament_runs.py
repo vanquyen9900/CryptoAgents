@@ -1,8 +1,8 @@
 """Summarize MeMo tournament trajectory outputs and rough LLM quota usage.
 
 Usage:
-    python DataLake/tools/summarize/summarize_memo_tournament_runs.py --tournament-id tour_2022_gen0
-    python DataLake/tools/summarize/summarize_memo_tournament_runs.py --data-mode offline_materialized --start-date 2022-03-01 --end-date 2022-03-01
+    python MemoAdapt/tools/summarize/summarize_memo_tournament_runs.py --tournament-id tour_2022_gen0
+    python MemoAdapt/tools/summarize/summarize_memo_tournament_runs.py --data-mode offline_materialized --start-date 2022-03-01 --end-date 2022-03-01
 """
 
 from __future__ import annotations

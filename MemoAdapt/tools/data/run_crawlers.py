@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 def run():
-    print("Starting DataLake Crawlers & Builders...")
+    print("Starting MemoAdapt Crawlers & Builders...")
     datalake_dir = Path(__file__).resolve().parents[2]
     crawlers_dir = datalake_dir / "crawlers"
     builders_dir = datalake_dir / "builders"
