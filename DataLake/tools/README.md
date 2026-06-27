@@ -1,6 +1,6 @@
-# DataLake Tools
+# Công cụ hỗ trợ DataLake
 
-Root `DataLake` keeps only the primary entrypoints:
+Root `DataLake` chỉ giữ các entrypoint chính:
 
 ```powershell
 python DataLake/run_test_2024_q1_crawl.py
@@ -8,17 +8,17 @@ python DataLake/run_q1_2024_experiment.py
 python DataLake/run_memo_tournament.py
 ```
 
-Supporting tools live here:
+Các công cụ hỗ trợ được đặt trong thư mục này:
 
-- `health/`: dataset health checks.
-- `validation/`: dataset, context, tournament, and portfolio validators.
-- `contracts/`: contract tests for Q1 artifacts and integration behavior.
-- `summarize/`: tournament run/score summarizers.
-- `data/`: full crawler/builder orchestration helper.
-- `legacy/`: older orchestration scripts kept for reference or manual use.
-- `demo/`: mock/demo artifact generator; do not use its output as research results.
+- `health/`: kiểm tra sức khỏe dataset và test split.
+- `validation/`: kiểm tra dataset, context, tournament và portfolio outputs.
+- `contracts/`: contract tests cho artifact Q1 và hành vi tích hợp.
+- `summarize/`: script tổng hợp run và score của tournament.
+- `data/`: helper điều phối crawler/builder đầy đủ.
+- `legacy/`: script orchestration cũ, giữ lại để tham khảo hoặc chạy thủ công.
+- `demo/`: generator mock/demo artifact; không dùng output ở đây làm kết quả nghiên cứu.
 
-Common checks:
+Các lệnh kiểm tra thường dùng:
 
 ```powershell
 python DataLake/tools/health/check_test_split_health.py

@@ -1,114 +1,159 @@
-### 🗂️ Toàn bộ Dữ liệu Bộ nhớ (Memory Bank)
+# Báo cáo trích xuất bộ nhớ MeMo
 
-Để minh bạch hóa quá trình ra quyết định của Agent ở Arm B, dưới đây là **toàn bộ 13 bài học** hiện có trong tệp `memo_memory_bank.jsonl`. Bộ nhớ được chia làm 2 phần: Bài học mồi từ 2022 và Bài học tích lũy hàng tuần trong Q1/2024.
+Tài liệu này mô tả toàn bộ 13 bài học hiện có trong memory bank dùng cho Arm B (`Ours + Memory`) của thực nghiệm Q1/2024. Bộ nhớ được chia thành hai nhóm:
 
-#### A. Nhóm Bài học mồi từ chu kỳ 2022 (Seed Memories)
-Các bài học này được nạp vào mô hình trước khi chạy Q1/2024, đúc kết từ môi trường Bear Market để dạy Agent cách phòng thủ:
+- 8 seed memories rút ra từ giai đoạn thị trường giảm năm 2022.
+- 5 weekly lessons được sinh tự động trong Q1/2024 sau mỗi tuần giao dịch.
 
-**1. Bearish Trend Following Underweight (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN is in a bearish momentum state with price below both SMA50 and SMA200, MACD negative, and a 15-row return of -7.4%. RSI is neutral, so the stock is not yet deeply oversold; this is more of a trend-confirmation setup than a rebound setup.
-- **Hành động (DO)**:
-  - Underweight or stay defensive when price is below both SMA50 and SMA200.
-  - Treat negative MACD plus a recent multi-day decline as trend confirmation, not a dip-buy signal.
-  - Wait for price to reclaim at least SMA50 with improving momentum before adding risk.
-  - Use elevated volume on a down session as confirmation of active selling pressure.
-- **Cần tránh (AVOID)**:
-  - Do not Buy solely because RSI is neutral or because the stock is below a prior support area.
-  - Do not overweight positive broker commentary when price action and momentum are deteriorating.
-  - Do not assume a one-day bounce indicates trend reversal after a multi-week decline.
-  - Do not average down into a below-SMA50/below-SMA200, negative-MACD regime.
+Các bài học này không phải nhãn đúng/sai tuyệt đối. Trong pipeline, chúng được dùng như kinh nghiệm ngữ cảnh cho stage quyết định cuối cùng, sau khi đã lọc theo thời điểm `visible_from` để tránh rò rỉ thông tin tương lai.
 
-**2. Regime-Sensitive Hold Bias (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN is in a bearish momentum regime: price is below both SMA50 and SMA200, RSI is weak, MACD is negative, and recent returns are down. In this state, the default edge is to avoid new longs unless there is a clear reversal catalyst. The observed winner/loser split shows that prompt sets can diverge between Hold and Buy, but the buy attempt under this setup lost on the weighted 1d/5d/20d reward horizon.
-- **Hành động (DO)**:
-  - Default to Hold when price is below both SMA50 and SMA200 and MACD is negative.
-  - Require a confirmed reversal before taking a long: reclaim SMA50, improving RSI, and MACD cross/inflection.
-  - Use the 20d horizon as the primary filter; if longer-horizon trend remains negative, avoid contrarian buys.
-- **Cần tránh (AVOID)**:
-  - Do not Buy solely because the stock is oversold or because there are mixed/supportive headlines.
-  - Do not interpret moderate volume as a bullish breakout by itself.
-  - Do not average into weakness while the trend stack remains bearish.
+## 1. Seed memories từ chu kỳ 2022
 
-**3. Risk Off Trend Following (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN was in a high-conviction bearish momentum state: price below both SMA50 and SMA200, RSI weak, MACD negative, and the recent return was sharply down with elevated volume. This is a regime where the path of least resistance is still lower, so the prior trend dominates mixed fundamentals or short-term bounces.
-- **Hành động (DO)**:
-  - Underweight the position when price is below SMA50 and SMA200 and MACD is negative.
-  - Require trend-reversal confirmation before upgrading to Buy, such as reclaiming SMA50 plus improving momentum.
-  - Use elevated volume as confirmation of active selling unless price also breaks above resistance.
-- **Cần tránh (AVOID)**:
-  - Do not Buy solely because of short-term bounce or mixed supportive news.
-  - Do not treat a one-day rebound as a regime change when RSI is still weak and MACD remains negative.
-  - Do not override the trend with optimism from isolated analyst or business updates.
+Các seed memories được nạp trước khi chạy Q1/2024. Mục tiêu là giúp agent có ký ức về các tình huống bearish, tránh bắt đáy quá sớm và quản trị drawdown tốt hơn.
 
-**4. Trend Continuation Short Bias (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN is in a high-conviction bearish momentum state: price is below both SMA50 and SMA200, RSI is weak, MACD is negative, and the recent return is sharply down on elevated volume. This is a regime where downside continuation is more actionable than mean reversion.
-- **Hành động (DO)**:
-  - Prefer Sell or reduce exposure when price is below both SMA50 and SMA200 and MACD is negative.
-  - Use elevated volume on down days as confirmation that the bearish move is being accepted by the market.
-  - Bias toward continuation over mean reversion in this exact regime, especially when the 20d horizon dominates scoring.
-- **Cần tránh (AVOID)**:
-  - Avoid Hold when all trend and momentum signals are aligned bearish.
-  - Avoid waiting for positive news to rescue the trade if price action keeps weakening.
-  - Avoid treating a weak RSI alone as an oversold bounce setup when the larger trend is still down.
+### 1.1 Bearish Trend Following Underweight
 
-**5. State-Specific Trade-Off (bullish_momentum)**
-- **Nhận định (Summary)**: AMZN is in a fragile bullish-momentum transition: price is above SMA50 but still below SMA200, RSI is neutral, MACD is barely positive, and the recent 15-row return is still negative. This is a decision point where the market is bouncing inside a larger downtrend, so the edge depends on whether the model prioritizes trend continuation risk or the immediate reversal setup.
-- **Hành động (DO)**:
-  - Sell or trim when price is reclaiming only the short SMA but remains below the long SMA after a sharp recent decline.
-  - Prefer exit/short-risk reduction if MACD is positive but close to zero and RSI is neutral, because momentum is not confirmed.
-  - Use the bounce to de-risk when the prior trend was down and the rebound is not backed by strong momentum expansion.
-- **Cần tránh (AVOID)**:
-  - Avoid Hold when the move is just a relief bounce inside a broader bearish structure.
-  - Avoid assuming a positive MACD alone means trend repair.
-  - Avoid waiting for SMA200 recovery as the only confirmation if the recent drawdown is still dominant.
+- **Regime**: `bearish_momentum`
+- **Nhận định**: AMZN nằm trong trạng thái bearish momentum: giá dưới cả SMA50 và SMA200, MACD âm, lợi nhuận gần đây giảm mạnh. RSI chưa quá bán sâu, nên đây giống tín hiệu xác nhận xu hướng giảm hơn là tín hiệu hồi phục.
+- **Nên làm**:
+  - Giảm tỷ trọng hoặc giữ trạng thái phòng thủ khi giá dưới cả SMA50 và SMA200.
+  - Xem MACD âm kèm chuỗi giảm nhiều ngày là xác nhận xu hướng, không phải tín hiệu mua khi giá giảm.
+  - Chờ giá lấy lại ít nhất SMA50 cùng momentum cải thiện trước khi tăng rủi ro.
+  - Dùng volume cao trong phiên giảm như xác nhận áp lực bán đang hoạt động.
+- **Cần tránh**:
+  - Không mua chỉ vì RSI trung tính hoặc giá đã rơi về vùng hỗ trợ cũ.
+  - Không đặt quá nhiều trọng số vào bình luận tích cực từ broker khi price action và momentum đang xấu đi.
+  - Không xem một phiên bật lại là đảo chiều xu hướng sau nhiều tuần giảm.
+  - Không bình quân giá xuống trong regime dưới SMA50/dưới SMA200 và MACD âm.
 
-**6. Event Risk Momentum Split (bullish_momentum)**
-- **Nhận định (Summary)**: AMZN was in a constructive momentum regime (above SMA50, below SMA200, RSI strong, MACD positive, return up) with unusually high volume, but it was also immediately before earnings. This is a classic high-variance inflection point where the same bullish technical setup can justify either Buy or Hold depending on whether the prompt prioritizes momentum continuation or event-risk avoidance.
-- **Hành động (DO)**:
-  - Buy when price is above SMA50, RSI is strong, MACD is positive, and volume confirms the move.
-  - Treat pre-earnings momentum as tradable when the technical setup is aligned and the move is already underway.
-  - Prefer participation over caution when the weighted scorer rewards 5d/20d continuation and there is no sign of technical exhaustion.
-- **Cần tránh (AVOID)**:
-  - Avoid automatic Hold just because an earnings announcement is imminent.
-  - Avoid letting macro-defensive logic suppress a clean momentum signal without additional evidence of reversal or breakdown.
-  - Avoid using SMA200 proximity as a reason to wait if the short-term trend is already confirmed and the trade horizon includes post-event continuation.
+### 1.2 Regime-Sensitive Hold Bias
 
-**7. Trajectory Reflection (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN was in a clear bearish momentum regime: price below both SMA50 and SMA200, RSI weak, MACD negative, and 15-row return down. This is a decisive inflection state because the same inputs produced opposite actions, and the weighted 1d/5d/20d scorer rewarded the path that caught a short-horizon continuation into a much larger 20d rebound.
-- **Hành động (DO)**:
-  - Treat the setup as a possible contrarian reversal candidate, not just a bearish trend-following setup.
-  - Use a small Buy or starter long when the tape is weak but stretched and you are optimizing for 5d/20d reward.
-  - Expect possible negative 1d noise and judge the trade on multi-day follow-through.
-- **Cần tránh (AVOID)**:
-  - Avoid automatic Underweight/flat decisions purely because price is below both moving averages.
-  - Avoid overreacting to the negative MACD/RSI by assuming downside must continue immediately.
-  - Avoid using this lesson for short-horizon scalps where 1d outcome dominates.
+- **Regime**: `bearish_momentum`
+- **Nhận định**: Trong regime bearish, mặc định nên tránh mở long mới nếu chưa có catalyst đảo chiều rõ. Các prompt có thể phân kỳ giữa Hold và Buy, nhưng nỗ lực Buy trong setup này bị phạt trên reward horizon 1d/5d/20d.
+- **Nên làm**:
+  - Mặc định Hold khi giá dưới SMA50/SMA200 và MACD âm.
+  - Chỉ mở long khi có xác nhận đảo chiều: lấy lại SMA50, RSI cải thiện, MACD cắt lên hoặc có inflection rõ.
+  - Dùng horizon 20 ngày làm bộ lọc chính; nếu xu hướng dài hơn vẫn âm, tránh các lệnh mua ngược xu hướng.
+- **Cần tránh**:
+  - Không mua chỉ vì cổ phiếu quá bán hoặc headline có vẻ hỗ trợ.
+  - Không xem volume vừa phải là breakout tăng giá.
+  - Không tăng vị thế khi trend stack vẫn bearish.
 
-**8. Trajectory Reflection (bearish_momentum)**
-- **Nhận định (Summary)**: AMZN is in a high-conviction bearish momentum state: price is below both SMA50 and SMA200, RSI is weak, MACD is negative, and the 15-session return is sharply down with elevated volume. This is a regime where trend-following pressure dominates and signals can diverge on whether to fade the move or respect the tape.
-- **Hành động (DO)**:
-  - Treat a deep selloff below SMA50 and SMA200 as a decisive momentum-break state.
-  - Consider a small tactical Buy only if oversold conditions and reversal evidence appear together.
-  - Use tight sizing and explicit risk limits when fading an extended decline.
-- **Cần tránh (AVOID)**:
-  - Avoid defaulting to Underweight just because the stock has fallen sharply.
-  - Avoid assuming bearish momentum always implies further downside on the next 1d/5d/20d horizons.
-  - Avoid scaling aggressively into the trend without a reversal catalyst.
+### 1.3 Risk Off Trend Following
 
-#### B. Nhóm Bài học tích lũy hàng tuần (Q1/2024 Weekly Learning)
-Các bài học này được Agent tự động tạo ra vào cuối mỗi tuần giao dịch trong Q1/2024 (phản tư - Reflection) để tối ưu hóa quyết định cho tuần tiếp theo:
+- **Regime**: `bearish_momentum`
+- **Nhận định**: AMZN ở trạng thái bearish có độ tin cậy cao: giá dưới SMA50 và SMA200, RSI yếu, MACD âm, return gần đây giảm mạnh với volume cao. Trong chế độ này, xu hướng trước đó thường quan trọng hơn các tín hiệu cơ bản lẫn nhịp hồi ngắn hạn.
+- **Nên làm**:
+  - Giảm tỷ trọng khi giá dưới SMA50/SMA200 và MACD âm.
+  - Đòi hỏi xác nhận đảo chiều trước khi nâng lên Buy.
+  - Xem volume cao là xác nhận bán trừ khi giá cũng phá lên vùng kháng cự.
+- **Cần tránh**:
+  - Không mua chỉ vì có nhịp hồi ngắn hạn hoặc tin tức hỗ trợ rời rạc.
+  - Không xem một ngày hồi phục là đổi regime khi RSI còn yếu và MACD còn âm.
+  - Không để optimism từ một vài cập nhật kinh doanh lấn át xu hướng giá.
 
-**1. Tuần giao dịch: 2024-01-02 đến 2024-01-05**
-- **Nhật ký (Reflection)**: Weekly Reflection (2024-01-02 to 2024-01-05): | Actions taken: {'AAPL: Hold': 8, 'GOOGL: Buy': 6, 'GOOGL: Underweight': 6, 'AMZN: Buy': 5, 'AMZN: Underweight': 4, 'AMZN: Hold': 3, 'AAPL: Buy': 2, 'AAPL: Underweight': 2} | Situational lesson: For setups resembling the week 2024-01-02 to 2024-01-05, compare the current technical/news evidence against the recent decision ledger before changing exposure. Avoid treating momentum alone as sufficient; require support/resistance, risk, and macro/social confirmation before increasing or reducing a position.
+### 1.4 Trend Continuation Short Bias
 
-**2. Tuần giao dịch: 2024-01-08 đến 2024-01-12**
-- **Nhật ký (Reflection)**: Weekly Reflection (2024-01-08 to 2024-01-12): | Actions taken: {'GOOGL: Buy': 8, 'AMZN: Underweight': 7, 'AMZN: Buy': 7, 'AAPL: Buy': 6, 'AAPL: Hold': 5, 'GOOGL: Underweight': 5, 'AAPL: Underweight': 4, 'GOOGL: Hold': 2, 'AMZN: Hold': 1} | Situational lesson: For setups resembling the week 2024-01-08 to 2024-01-12, compare the current technical/news evidence against the recent decision ledger before changing exposure. Avoid treating momentum alone as sufficient; require support/resistance, risk, and macro/social confirmation before increasing or reducing a position.
+- **Regime**: `bearish_momentum`
+- **Nhận định**: Giá dưới cả hai đường trung bình, RSI yếu, MACD âm và return gần đây giảm mạnh. Đây là tình huống mà xác suất tiếp diễn giảm có tính hành động cao hơn mean reversion.
+- **Nên làm**:
+  - Ưu tiên Sell hoặc giảm exposure khi trend và momentum cùng bearish.
+  - Dùng volume cao ở phiên giảm như dấu hiệu thị trường chấp nhận nhịp giảm.
+  - Ưu tiên continuation hơn mean reversion khi horizon 20 ngày chi phối scoring.
+- **Cần tránh**:
+  - Tránh Hold khi toàn bộ tín hiệu trend và momentum đều bearish.
+  - Tránh kỳ vọng tin tốt sẽ cứu vị thế nếu price action tiếp tục yếu.
+  - Tránh xem RSI yếu một mình là setup bật lại khi xu hướng lớn vẫn giảm.
 
-**3. Tuần giao dịch: 2024-01-15 đến 2024-01-19**
-- **Nhật ký (Reflection)**: Weekly Reflection (2024-01-15 to 2024-01-19): | Actions taken: {'GOOGL: Buy': 6, 'GOOGL: Underweight': 6, 'AAPL: Underweight': 5, 'AAPL: Buy': 5, 'AMZN: Hold': 4, 'AMZN: Buy': 4, 'AMZN: Underweight': 4, 'AAPL: Hold': 2} | Situational lesson: For setups resembling the week 2024-01-15 to 2024-01-19, compare the current technical/news evidence against the recent decision ledger before changing exposure. Avoid treating momentum alone as sufficient; require support/resistance, risk, and macro/social confirmation before increasing or reducing a position.
+### 1.5 State-Specific Trade-Off
 
-**4. Tuần giao dịch: 2024-01-22 đến 2024-01-26**
-- **Nhật ký (Reflection)**: Weekly Reflection (2024-01-22 to 2024-01-26): | Actions taken: {'AMZN: Hold': 8, 'GOOGL: Hold': 7, 'AAPL: Hold': 5, 'AAPL: Buy': 5, 'GOOGL: Underweight': 5, 'AAPL: Underweight': 4, 'AMZN: Buy': 4, 'AMZN: Underweight': 3, 'GOOGL: Buy': 3, 'AAPL: ': 1} | Situational lesson: For setups resembling the week 2024-01-22 to 2024-01-26, compare the current technical/news evidence against the recent decision ledger before changing exposure. Avoid treating momentum alone as sufficient; require support/resistance, risk, and macro/social confirmation before increasing or reducing a position.
+- **Regime**: `bullish_momentum`
+- **Nhận định**: AMZN ở pha chuyển tiếp bullish mong manh: giá trên SMA50 nhưng vẫn dưới SMA200, RSI trung tính, MACD chỉ hơi dương và return gần đây vẫn âm. Đây có thể là nhịp hồi trong downtrend lớn hơn.
+- **Nên làm**:
+  - Bán hoặc giảm tỷ trọng khi giá chỉ mới lấy lại SMA ngắn hạn nhưng vẫn dưới SMA dài hạn sau một nhịp giảm mạnh.
+  - Ưu tiên giảm rủi ro nếu MACD dương nhưng gần 0 và RSI trung tính.
+  - Dùng nhịp hồi để de-risk khi rebound chưa có momentum mở rộng.
+- **Cần tránh**:
+  - Tránh Hold nếu nhịp tăng chỉ là relief bounce trong cấu trúc bearish lớn.
+  - Tránh giả định MACD dương đơn lẻ đồng nghĩa xu hướng đã hồi phục.
+  - Tránh chờ SMA200 như xác nhận duy nhất nếu drawdown gần đây vẫn chi phối.
 
-**5. Tuần giao dịch: 2024-01-29 đến 2024-01-31**
-- **Nhật ký (Reflection)**: Weekly Reflection (2024-01-29 to 2024-01-31): | Actions taken: {'AAPL: Hold': 7, 'AMZN: Hold': 6, 'GOOGL: Hold': 6, 'AMZN: Buy': 2, 'GOOGL: Underweight': 2, 'GOOGL: Buy': 1, 'AAPL: Underweight': 1, 'AMZN: Underweight': 1, 'AAPL: ': 1} | Situational lesson: For setups resembling the week 2024-01-29 to 2024-01-31, compare the current technical/news evidence against the recent decision ledger before changing exposure. Avoid treating momentum alone as sufficient; require support/resistance, risk, and macro/social confirmation before increasing or reducing a position.
+### 1.6 Event Risk Momentum Split
+
+- **Regime**: `bullish_momentum`
+- **Nhận định**: AMZN có setup momentum tích cực nhưng nằm ngay trước earnings. Đây là điểm có phương sai cao: cùng một tín hiệu kỹ thuật có thể dẫn tới Buy hoặc Hold tùy prompt ưu tiên continuation hay né event risk.
+- **Nên làm**:
+  - Buy khi giá trên SMA50, RSI mạnh, MACD dương và volume xác nhận.
+  - Xem pre-earnings momentum là có thể giao dịch nếu setup kỹ thuật đã đồng thuận và nhịp tăng đang diễn ra.
+  - Ưu tiên tham gia khi scorer thưởng continuation 5d/20d và chưa có dấu hiệu exhaustion.
+- **Cần tránh**:
+  - Không tự động Hold chỉ vì earnings sắp diễn ra.
+  - Không để logic macro-defensive triệt tiêu một momentum signal sạch nếu không có bằng chứng đảo chiều.
+  - Không dùng việc còn gần SMA200 như lý do chờ đợi khi short-term trend đã rõ.
+
+### 1.7 Trajectory Reflection: contrarian reversal candidate
+
+- **Regime**: `bearish_momentum`
+- **Nhận định**: AMZN có bearish momentum rõ, nhưng cùng input lại sinh các hành động trái ngược. Weighted scorer có lúc thưởng đường đi bắt được nhịp hồi lớn hơn ở horizon 20 ngày.
+- **Nên làm**:
+  - Xem setup là ứng viên đảo chiều contrarian, không chỉ là trend-following giảm.
+  - Có thể dùng Buy nhỏ hoặc starter long khi giá yếu nhưng đã căng và mục tiêu tối ưu là reward 5d/20d.
+  - Chấp nhận nhiễu âm 1 ngày và đánh giá theo follow-through nhiều ngày.
+- **Cần tránh**:
+  - Không tự động Underweight/flat chỉ vì giá dưới cả hai đường trung bình.
+  - Không phản ứng quá mức với MACD/RSI âm bằng cách mặc định giảm tiếp ngay.
+  - Không dùng bài học này cho lệnh quá ngắn hạn khi outcome 1 ngày chi phối.
+
+### 1.8 Trajectory Reflection: fading extended decline
+
+- **Regime**: `bearish_momentum`
+- **Nhận định**: AMZN giảm sâu dưới SMA50/SMA200, RSI yếu, MACD âm và volume cao. Đây là trạng thái momentum-break mạnh, nhưng cũng có thể tạo phân kỳ giữa việc tiếp tục tôn trọng xu hướng và việc fade nhịp giảm quá dài.
+- **Nên làm**:
+  - Xem selloff sâu dưới SMA50/SMA200 là trạng thái phá vỡ momentum quan trọng.
+  - Chỉ cân nhắc Buy chiến thuật nhỏ nếu oversold đi kèm bằng chứng đảo chiều.
+  - Dùng sizing nhỏ và giới hạn rủi ro rõ khi giao dịch ngược xu hướng.
+- **Cần tránh**:
+  - Không mặc định Underweight chỉ vì cổ phiếu đã giảm mạnh.
+  - Không giả định bearish momentum luôn tiếp diễn trên mọi horizon 1d/5d/20d.
+  - Không tăng vị thế mạnh khi chưa có catalyst đảo chiều.
+
+## 2. Weekly lessons trong Q1/2024
+
+Các weekly lessons được sinh tự động ở cuối từng tuần giao dịch. Chúng tóm tắt tần suất hành động đã xảy ra và nhắc agent dùng decision ledger trước khi thay đổi exposure trong tuần kế tiếp.
+
+### 2.1 Tuần 2024-01-02 đến 2024-01-05
+
+- **Actions taken**: `AAPL: Hold` 8, `GOOGL: Buy` 6, `GOOGL: Underweight` 6, `AMZN: Buy` 5, `AMZN: Underweight` 4, `AMZN: Hold` 3, `AAPL: Buy` 2, `AAPL: Underweight` 2.
+- **Bài học tình huống**: Với setup giống tuần này, cần so sánh technical/news evidence hiện tại với decision ledger gần nhất trước khi đổi exposure. Không xem momentum đơn lẻ là đủ; cần thêm support/resistance, risk và xác nhận macro/social.
+
+### 2.2 Tuần 2024-01-08 đến 2024-01-12
+
+- **Actions taken**: `GOOGL: Buy` 8, `AMZN: Underweight` 7, `AMZN: Buy` 7, `AAPL: Buy` 6, `AAPL: Hold` 5, `GOOGL: Underweight` 5, `AAPL: Underweight` 4, `GOOGL: Hold` 2, `AMZN: Hold` 1.
+- **Bài học tình huống**: Khi tín hiệu mua và giảm tỷ trọng xuất hiện đồng thời, agent cần kiểm tra liệu quyết định mới có đang lặp lại bias của tuần trước hay có bằng chứng mới đủ mạnh để thay đổi vị thế.
+
+### 2.3 Tuần 2024-01-15 đến 2024-01-19
+
+- **Actions taken**: `GOOGL: Buy` 6, `GOOGL: Underweight` 6, `AAPL: Underweight` 5, `AAPL: Buy` 5, `AMZN: Hold` 4, `AMZN: Buy` 4, `AMZN: Underweight` 4, `AAPL: Hold` 2.
+- **Bài học tình huống**: Khi action phân tán gần như cân bằng, không nên tăng hoặc giảm vị thế chỉ dựa vào một nhóm tín hiệu. Cần buộc prompt nêu rõ luận cứ vì sao evidence hiện tại khác tuần trước.
+
+### 2.4 Tuần 2024-01-22 đến 2024-01-26
+
+- **Actions taken**: `AMZN: Hold` 8, `GOOGL: Hold` 7, `AAPL: Hold` 5, `AAPL: Buy` 5, `GOOGL: Underweight` 5, `AAPL: Underweight` 4, `AMZN: Buy` 4, `AMZN: Underweight` 3, `GOOGL: Buy` 3.
+- **Bài học tình huống**: Khi Hold chiếm ưu thế, agent nên xem đây là tín hiệu yêu cầu xác nhận cao hơn trước khi thay đổi exposure, đặc biệt nếu risk và macro/social chưa đồng thuận.
+
+### 2.5 Tuần 2024-01-29 đến 2024-01-31
+
+- **Actions taken**: `AAPL: Hold` 7, `AMZN: Hold` 6, `GOOGL: Hold` 6, `AMZN: Buy` 2, `GOOGL: Underweight` 2, `GOOGL: Buy` 1, `AAPL: Underweight` 1, `AMZN: Underweight` 1.
+- **Bài học tình huống**: Trong tuần ngắn và tín hiệu thiên về Hold, memory nên khuyến khích agent tránh overtrading. Chỉ tăng hoặc giảm vị thế khi có bằng chứng mới rõ ràng hơn decision ledger hiện tại.
+
+## 3. Cách bộ nhớ được dùng trong quyết định
+
+Khi chạy Arm B, runner chỉ đưa tối đa 5 memory phù hợp nhất vào context cuối:
+
+- Memory chưa đến `visible_from` bị loại để tránh leakage.
+- Memory cùng symbol được cộng điểm.
+- Memory cùng regime được cộng điểm, nhưng không bắt buộc phải cùng regime.
+- Memory có nội dung về rủi ro hoặc bài học từ outcome âm được cộng thêm điểm.
+- Memory chỉ được inject ở stage `portfolio_manager_final_decision`.
+
+Điều này giúp memory đóng vai trò như lớp kinh nghiệm bổ sung, không thay thế dữ liệu point-in-time của ngày đang phân tích.

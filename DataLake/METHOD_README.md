@@ -1,38 +1,35 @@
-# DataLake Method Report: MeMo Adapt Q1/2024
+# Báo cáo phương pháp DataLake: MeMo Adapt Q1/2024
 
-## 1. Muc Tieu
+## 1. Mục tiêu
 
-`DataLake` la harness du lieu va thuc nghiem dung de danh gia viec ket hop
-TradingAgents-style multi-agent reasoning voi MeMo-style memory adaptation.
+`DataLake` là bộ dữ liệu và harness thực nghiệm dùng để đánh giá việc kết hợp kiểu suy luận multi-agent của TradingAgents với cơ chế thích nghi bộ nhớ của MeMo.
 
-Cau hoi chinh:
+Câu hỏi chính:
 
-> Bo nho lich su co giup agent ra quyet dinh tot hon baseline khong co memory
-> tren tap test Q1/2024 hay khong?
+> Bộ nhớ lịch sử có giúp agent ra quyết định tốt hơn baseline không có memory trên tập kiểm thử Q1/2024 hay không?
 
-Tai lieu nay gom gon method tu hai report:
+Tài liệu này gộp phần phương pháp và kết quả từ hai báo cáo:
 
 - `reports/q1_2024_performance_analysis.md`
 - `reports/memories_extracted.md`
 
-Ket qua khong phai loi khuyen dau tu. Day la benchmark offline, point-in-time,
-de so sanh prompt, memory policy va kha nang quan tri rui ro.
+Kết quả trong báo cáo không phải lời khuyên đầu tư. Đây là benchmark offline, point-in-time, dùng để so sánh prompt, chính sách truy xuất memory và khả năng quản trị rủi ro.
 
-## 2. Thiet Lap Thuc Nghiem
+## 2. Thiết lập thực nghiệm
 
-| Thanh phan | Gia tri |
+| Thành phần | Giá trị |
 |---|---|
 | Test split | `DataLake/data_test_2024_q1` |
-| Giai doan danh gia | `2024-01-02` den `2024-03-29` |
-| Symbols | `AAPL`, `AMZN`, `GOOGL` |
+| Giai đoạn đánh giá | `2024-01-02` đến `2024-03-29` |
+| Mã cổ phiếu | `AAPL`, `AMZN`, `GOOGL` |
 | Tournament | `tour_2024_q1_eval` |
 | Context policy | `ctx_paper_aligned_v1` |
 | Data mode | `offline_full_pipeline` |
-| Memory policy | `mem_top5_role_v1` cho arm co memory |
-| Execution | decision ngay `t`, khop lenh o open ngay giao dich ke tiep |
-| Portfolio | long-only, initial capital `100000`, transaction cost `0 bps` |
+| Memory policy | `mem_top5_role_v1` cho arm có memory |
+| Cơ chế khớp lệnh | Quyết định ở ngày `t`, khớp ở giá mở cửa của ngày giao dịch kế tiếp |
+| Portfolio | Long-only, vốn ban đầu `100000`, phí giao dịch `0 bps` |
 
-Pipeline chinh:
+Luồng pipeline chính:
 
 ```text
 crawl/normalize data
@@ -44,7 +41,7 @@ crawl/normalize data
   -> portfolio evaluation
 ```
 
-Lenh chay chinh:
+Các lệnh chạy chính:
 
 ```powershell
 python DataLake/run_test_2024_q1_crawl.py --skip-crawl
@@ -52,95 +49,88 @@ python DataLake/run_q1_2024_experiment.py
 python DataLake/run_q1_2024_experiment.py --arm EVAL
 ```
 
-## 3. Arms Va Artifact Status
+## 3. Các arm so sánh và trạng thái artifact
 
-| Arm | Nhom so sanh | Mo ta |
+| Arm | Nhóm so sánh | Mô tả |
 |---|---|---|
-| Market | Buy & Hold | Benchmark thi truong cho tung symbol |
-| Arm A | Ours w/o Memory | Agent khong co memory, dung `mem_none_v1` |
-| Arm B | Ours + Memory | Seed memory tu 2022 + weekly learning trong Q1/2024 |
+| Market | Buy & Hold | Benchmark thị trường cho từng mã |
+| Arm A | Ours w/o Memory | Agent không dùng memory, policy `mem_none_v1` |
+| Arm B | Ours + Memory | Seed memory từ năm 2022 và học thêm bài học hằng tuần trong Q1/2024 |
 
-Trang thai artifact hien tai:
+Trạng thái artifact hiện tại:
 
-- Episodes/materialized inputs co du Q1 window trong canonical split.
-- Real trajectories canonical hien co 2 nhom: Arm A va Arm B.
-- Moi nhom co 189 trajectory rows, tu `2024-01-02` den `2024-01-31`.
-- Moi trajectory la mot cap `episode x prompt_set`.
-- Benchmark report phan tich portfolio tren cua so Q1 bang cach forward-fill
-  exposure tu cac decision da co.
+- Episodes và materialized inputs đã đủ cửa sổ Q1 trong canonical split.
+- Real trajectories canonical hiện có hai nhóm: Arm A và Arm B.
+- Mỗi nhóm có 189 trajectory rows, từ `2024-01-02` đến `2024-01-31`.
+- Mỗi trajectory là một cặp `episode x prompt_set`.
+- Benchmark portfolio được tính trên cửa sổ Q1 bằng cách forward-fill exposure từ các quyết định đã có.
 
-## 4. Co Che MeMo Adapt
+## 4. Cơ chế MeMo Adapt
 
 ### 4.1 Memory Bank
 
-Memory bank la tap hop cac bai hoc co cau truc, moi memory gom:
+Memory bank là tập hợp các bài học có cấu trúc. Mỗi memory gồm:
 
-- `memory_id`: khoa dinh danh bai hoc.
-- `memory_bank_version`: version cua bank duoc dung trong arm.
-- `agent_role`: role duoc ap dung, hien runner filter theo `trader`.
-- `symbol`: symbol goc cua bai hoc, hoac `ANY` voi weekly lesson.
-- `market_regime`: regime cua bai hoc, vi du `bearish_momentum`.
-- `lesson`, `do`, `avoid`, `trigger_conditions`: noi dung dua vao context.
-- `quality_score`, `reward_20d`: tin hieu de xep hang memory.
-- `visible_from`: moc thoi gian memory bat dau duoc phep nhin thay.
+- `memory_id`: khóa định danh bài học.
+- `memory_bank_version`: phiên bản bank được dùng trong arm.
+- `agent_role`: vai trò áp dụng; runner hiện lọc theo `trader`.
+- `symbol`: mã gốc của bài học, hoặc `ANY` với weekly lesson.
+- `market_regime`: chế độ thị trường của bài học, ví dụ `bearish_momentum`.
+- `lesson`, `do`, `avoid`, `trigger_conditions`: nội dung đưa vào context.
+- `quality_score`, `reward_20d`: tín hiệu dùng để xếp hạng memory.
+- `visible_from`: mốc thời gian memory bắt đầu được phép hiển thị cho agent.
 
-Arm B seed memory duoc copy tu training bank:
+Arm B dùng seed memory được copy từ training bank:
 
 ```text
 mb_2022_full_highvar_trueskill_socialproxy_llm_v1
   -> mb_q1_2024_2022_memory_weekly_learning_v1
 ```
 
-Khi copy seed, runner doi `memory_id` bang suffix `_seed2022` va dat
-`visible_from = 2024-01-02T00:00:00Z`, nen Q1 agent co the dung seed memory
-ngay tu ngay dau.
+Khi copy seed, runner đổi `memory_id` bằng suffix `_seed2022` và đặt `visible_from = 2024-01-02T00:00:00Z`. Vì vậy, Q1 agent có thể dùng seed memory ngay từ ngày giao dịch đầu tiên.
 
 ### 4.2 Weekly Learning
 
-Sau moi tuan cua Arm B, `memo_weekly_lesson_manager.py` loc trajectories trong
-tuan do va sinh mot weekly lesson.
+Sau mỗi tuần của Arm B, `memo_weekly_lesson_manager.py` lọc trajectories trong tuần đó và sinh một weekly lesson.
 
-Co che hien tai la rule-based reflection:
+Cơ chế hiện tại là reflection dạng rule-based:
 
-- Dem tan suat action theo symbol, vi du `AAPL: Hold`, `AMZN: Buy`.
-- Tao situational lesson nhac agent so sanh current evidence voi decision ledger.
-- Nhac agent khong dung momentum don le; can support/resistance, risk,
-  macro/social confirmation.
+- Đếm tần suất hành động theo từng mã, ví dụ `AAPL: Hold`, `AMZN: Buy`.
+- Tạo situational lesson nhắc agent so sánh evidence hiện tại với decision ledger gần nhất.
+- Nhắc agent không dùng momentum đơn lẻ; cần xác nhận thêm từ support/resistance, rủi ro, macro và social signals.
 - Ghi lesson ra `memory_bank/weekly_lessons/*.md`.
 
-Weekly lesson dat `visible_from` sau `week_end`, vi vay lesson cua tuan hien tai
-khong leak nguoc vao chinh cac decision trong tuan do.
+Weekly lesson có `visible_from` sau `week_end`, vì vậy bài học của tuần hiện tại không bị leak ngược vào các quyết định trong chính tuần đó.
 
-### 4.3 Cach Chon Bai Hoc Dua Vao Context
+### 4.3 Cách chọn bài học đưa vào context
 
-Trong `run_memo_tournament.py`, voi moi trajectory:
+Trong `run_memo_tournament.py`, với mỗi trajectory:
 
 1. Load memory bank theo `memory_bank_version`.
-2. Loai memory co `visible_from > analysis_time`.
-3. Goi `retrieve_memories_for_context(...)`.
-4. Format memory thanh markdown bang `format_retrieved_memories(...)`.
-5. Dua memory markdown vao final portfolio decision stage.
+2. Loại memory có `visible_from > analysis_time`.
+3. Gọi `retrieve_memories_for_context(...)`.
+4. Format memory thành markdown bằng `format_retrieved_memories(...)`.
+5. Đưa memory markdown vào stage quyết định portfolio cuối cùng.
 
 Policy `mem_top5_role_v1`:
 
-| Rule | Gia tri |
+| Rule | Giá trị |
 |---|---|
 | `top_k_memories` | 5 |
 | `same_symbol_boost` | true |
 | `same_regime_required` | false |
 | `agent_role_filter` | true |
 
-Regime hien tai duoc infer tu materialized input:
+Regime hiện tại được suy luận từ materialized input:
 
-- `close` so voi `SMA50`.
-- `close` so voi `SMA200`.
-- `MACD` am/duong.
-- `RSI` yeu/manh.
+- `close` so với `SMA50`.
+- `close` so với `SMA200`.
+- `MACD` âm/dương.
+- `RSI` yếu/mạnh.
 
-Neu bearish votes >= 2 thi regime la `bearish_momentum`; neu bullish votes >= 2
-thi la `bullish_momentum`; con lai la `mixed_regime`.
+Nếu bearish votes >= 2 thì regime là `bearish_momentum`; nếu bullish votes >= 2 thì regime là `bullish_momentum`; các trường hợp còn lại là `mixed_regime`.
 
-Sau khi loc, memory duoc score:
+Sau khi lọc, memory được chấm điểm:
 
 ```text
 score =
@@ -151,13 +141,11 @@ score =
   + min(abs(reward_20d), 0.25)
 ```
 
-Cuoi cung runner lay top 5 memories co score cao nhat. Memory chi la
-`situational prior`; prompt final decision noi ro current point-in-time evidence
-va current portfolio state phai uu tien hon bai hoc lich su.
+Runner lấy top 5 memories có score cao nhất. Memory chỉ đóng vai trò `situational prior`; prompt final decision nêu rõ rằng current point-in-time evidence và current portfolio state phải được ưu tiên hơn bài học lịch sử.
 
-### 4.4 Memory Duoc Dua Vao Stage Nao
+### 4.4 Memory được đưa vào stage nào
 
-`offline_full_pipeline` chay 7 stage LLM:
+`offline_full_pipeline` chạy 7 stage LLM:
 
 1. Market analyst.
 2. News/social/macro analyst.
@@ -167,27 +155,25 @@ va current portfolio state phai uu tien hon bai hoc lich su.
 6. Risk debate.
 7. Portfolio manager final decision.
 
-Memory chi duoc inject vao stage 7: `portfolio_manager_final_decision`.
+Memory chỉ được inject vào stage 7: `portfolio_manager_final_decision`.
 
-Decision ledger duoc dua vao trader/risk/final stage. Ledger chi gom cac
-decision truoc do cung `symbol`, cung `prompt_set`, cung `comparison_group`, va
-cho biet `current_exposure_before_decision`.
+Decision ledger được đưa vào trader/risk/final stage. Ledger chỉ gồm các quyết định trước đó cùng `symbol`, cùng `prompt_set`, cùng `comparison_group`, đồng thời cho biết `current_exposure_before_decision`.
 
-Y nghia thuc nghiem:
+Ý nghĩa thực nghiệm:
 
-- Analyst stages doc du lieu hien tai, khong bi memory chi phoi.
-- Trader/risk stage thay lich su position gan day qua decision ledger.
-- Final portfolio manager moi nhan memory nhu kinh nghiem bo sung.
-- Cach nay giam nguy co memory tro thanh "ground truth" thay vi soft prior.
+- Analyst stages đọc dữ liệu hiện tại, không bị memory chi phối.
+- Trader/risk stage nhìn thấy lịch sử position gần đây qua decision ledger.
+- Final portfolio manager mới nhận memory như kinh nghiệm bổ sung.
+- Cách này giảm nguy cơ memory bị dùng như "ground truth" thay vì soft prior.
 
 ## 5. Benchmark Q1/2024
 
-Chi so:
+Các chỉ số:
 
-- `CR%`: cumulative return.
-- `ARR%`: annualized return.
+- `CR%`: cumulative return, tức lợi nhuận tích lũy.
+- `ARR%`: annualized return, tức lợi nhuận quy đổi theo năm.
 - `SR`: Sharpe ratio.
-- `MDD%`: maximum drawdown, hien thi theo do lon drawdown duong nhu report goc.
+- `MDD%`: maximum drawdown, hiển thị theo độ lớn drawdown dương như report gốc.
 
 ### Market Benchmark
 
@@ -208,43 +194,33 @@ Chi so:
 | Ours + Memory | `ps_macro_defensive_v1` | -10.79 / -36.22 / -2.53 / 13.51 | 2.35 / 9.56 / 1.51 / 1.10 | 18.14 / 92.77 / 2.78 / 4.22 |
 | Ours + Memory | `ps_risk_aware_v1` | -1.82 / -6.98 / -1.25 / 3.06 | -2.19 / -8.37 / -0.65 / 6.09 | 14.05 / 67.79 / 2.26 / 4.22 |
 
-## 6. Dien Giai Ket Qua
+## 6. Diễn giải kết quả
 
-### AAPL: thi truong giam
+### AAPL: thị trường giảm
 
-Buy & Hold lo `-7.91%` voi MDD `13.50%`. Memory phat huy tot nhat khi ket hop
-voi `ps_risk_aware_v1`: CR chi con `-1.82%`, MDD `3.06%`. Day la bang chung
-ro nhat cho vai tro phong thu cua memory.
+Buy & Hold lỗ `-7.91%` với MDD `13.50%`. Memory phát huy tốt nhất khi kết hợp với `ps_risk_aware_v1`: CR chỉ còn `-1.82%`, MDD `3.06%`. Đây là bằng chứng rõ nhất cho vai trò phòng thủ của memory.
 
-### GOOGL: thi truong bien dong, tang nhe
+### GOOGL: thị trường biến động, tăng nhẹ
 
-Buy & Hold dat `12.87%` nhung MDD cao `14.40%`. Cau hinh Memory +
-`ps_macro_defensive_v1` khong bat tron upside, nhung van co CR duong `2.35%`
-va giam MDD xuong `1.10%`, la diem manh ve risk control.
+Buy & Hold đạt `12.87%` nhưng MDD cao `14.40%`. Cấu hình Memory + `ps_macro_defensive_v1` không bắt trọn upside, nhưng vẫn có CR dương `2.35%` và giảm MDD xuống `1.10%`. Điểm mạnh chính nằm ở kiểm soát rủi ro.
 
-### AMZN: thi truong tang manh
+### AMZN: thị trường tăng mạnh
 
-Buy & Hold dat `22.26%`. Agent bat duoc xu huong tang kha tot, dac biet
-baseline `ps_default_v1` dat `20.00%`. Khi bat memory, loi nhuan AMZN thap hon
-mot phan, cho thay memory co xu huong than trong hon de doi lay drawdown thap.
+Buy & Hold đạt `22.26%`. Agent bắt được xu hướng tăng khá tốt, đặc biệt baseline `ps_default_v1` đạt `20.00%`. Khi bật memory, lợi nhuận AMZN thấp hơn một phần, cho thấy memory có xu hướng thận trọng hơn để đổi lấy drawdown thấp.
 
-## 7. Ket Luan Method
+## 7. Kết luận phương pháp
 
-MeMo Adapt trong Q1/2024 khong dong vai tro "toi da hoa loi nhuan" mot cach
-don thuan. Tac dong ro nhat la lop phong thu drawdown:
+MeMo Adapt trong Q1/2024 không đóng vai trò "tối đa hóa lợi nhuận" một cách đơn thuần. Tác động rõ nhất là lớp phòng thủ drawdown:
 
-- Tot nhat tren AAPL khi thi truong giam: Memory + `ps_risk_aware_v1`.
-- Tot nhat tren GOOGL khi thi truong nhieu/bien dong: Memory +
-  `ps_macro_defensive_v1`.
-- Tren AMZN uptrend manh, baseline co the dat return cao hon, nhung memory van
-  giu drawdown o muc thap.
+- Tốt nhất trên AAPL khi thị trường giảm: Memory + `ps_risk_aware_v1`.
+- Tốt nhất trên GOOGL khi thị trường nhiễu/biến động: Memory + `ps_macro_defensive_v1`.
+- Trên AMZN uptrend mạnh, baseline có thể đạt return cao hơn, nhưng memory vẫn giữ drawdown ở mức thấp.
 
-Vi vay, ket qua nen duoc doc nhu mot trade-off: memory giup agent thuc dung va
-phong thu hon, dac biet khi prompt da co bias quan tri rui ro.
+Vì vậy, kết quả nên được đọc như một trade-off: memory giúp agent thực dụng và phòng thủ hơn, đặc biệt khi prompt đã có bias quản trị rủi ro.
 
 ## 8. Reproducibility
 
-Validation truoc va sau khi chay:
+Validation trước và sau khi chạy:
 
 ```powershell
 python DataLake/tools/health/check_test_split_health.py
@@ -253,10 +229,8 @@ python DataLake/tools/contracts/test_memo_portfolio_evaluation_contract.py --dat
 python DataLake/tools/contracts/test_memo_decision_ledger_contract.py
 ```
 
-Quy tac bao cao:
+Quy tắc báo cáo:
 
-- Chi dung `DataLake/data_test_2024_q1` lam canonical Q1 split.
-- Khong dung output mock/demo lam research result.
-- Khong recreate `data_test_2024_q1_armB` hay `data_test_2024_q1_armC`.
-- Luon giu ro `comparison_group`, `memory_policy_id`, `memory_bank_version`,
-  `context_policy_id` trong trajectory va report.
+- Chỉ dùng `DataLake/data_test_2024_q1` làm canonical Q1 split.
+- Không dùng output mock/demo làm research result.
+- Không recreate `data_test_2024_q1_armB` hay `data_test_2024_q1_armC`.
