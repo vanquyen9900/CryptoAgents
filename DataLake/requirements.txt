@@ -1,0 +1,6 @@
+pandas
+yfinance
+pandas_market_calendars
+pyarrow
+pytz
+trueskill

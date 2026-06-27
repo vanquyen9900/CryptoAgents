@@ -1,0 +1,12 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Local/generated data artifacts
+/data/
+/data_test_2024_q1/
+/data_test_2024_q1_arm*/
+
+# Common local outputs
+/.pytest_cache/
+/.mypy_cache/

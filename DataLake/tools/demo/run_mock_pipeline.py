@@ -1,0 +1,137 @@
+import os
+import json
+import subprocess
+from datetime import datetime, timedelta
+from pathlib import Path
+
+def main():
+    datalake_dir = Path(__file__).resolve().parents[2]
+    data_dir = str(datalake_dir / "data_test_2024_q1")
+    traj_dir = os.path.join(data_dir, "memo_adaptation", "trajectories")
+    os.makedirs(traj_dir, exist_ok=True)
+    traj_path = os.path.join(traj_dir, "workflow_trajectories.jsonl")
+
+    symbols = ["AAPL", "AMZN", "GOOGL"]
+    prompt_sets = ["ps_default_v1", "ps_risk_aware_v1", "ps_macro_defensive_v1"]
+    groups = [
+        ("test_q1_2024_baseline_no_memory", "none"),
+        ("test_q1_2024_2022_memory_weekly_learning", "mb_2022_full_highvar_trueskill_socialproxy_llm_v1"),
+        ("test_q1_2024_weekly_learning_only", "mb_q1_2024_weekly_only_v1")
+    ]
+    tournament_id = "tour_2024_q1_eval"
+
+    # Generate dates from 2024-01-02 to 2024-03-29
+    start_date = datetime(2024, 1, 2)
+    end_date = datetime(2024, 3, 29)
+    days = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((end_date - start_date).days + 1)]
+    # Filter out weekends simply
+    days = [d for d in days if datetime.strptime(d, "%Y-%m-%d").weekday() < 5]
+
+    trajectories = []
+    tid = 1
+    for day in days:
+        for sym in symbols:
+            for ps in prompt_sets:
+                for grp, mem_ver in groups:
+                    trajectories.append({
+                        "trajectory_id": f"traj_{tid}",
+                        "tournament_id": tournament_id,
+                        "comparison_group": grp,
+                        "symbol": sym,
+                        "prompt_set_id": ps,
+                        "analysis_time": f"{day}T16:00:00Z",
+                        "memory_bank_version": mem_ver,
+                        "agent_outputs": {"final_trade_decision": "BUY"}
+                    })
+                    tid += 1
+
+    with open(traj_path, "w") as f:
+        for t in trajectories:
+            f.write(json.dumps(t) + "\n")
+
+    print(f"Generated {len(trajectories)} mock trajectories at {traj_path}")
+
+    # Generate mock price data if not exists so evaluator doesn't crash
+    price_dir = os.path.join(data_dir, "features")
+    os.makedirs(price_dir, exist_ok=True)
+    # Evaluator uses pandas read_parquet, but we can write a simple parquet file
+    price_path = os.path.join(price_dir, "price_daily")
+    import pandas as pd
+    price_records = []
+    for day in days:
+        # Also need a few days after for next_open
+        for i in range(10):
+            d = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=i)).strftime("%Y-%m-%d")
+            for sym in symbols:
+                price_records.append({
+                    "instrument_id": sym,
+                    "known_time": pd.to_datetime(d),
+                    "open": 150.0,
+                    "close": 151.0
+                })
+    df_price = pd.DataFrame(price_records).drop_duplicates()
+    df_price.to_parquet(price_path)
+
+    # Run evaluator for each arm
+    for grp, mem in groups:
+        cmd = [
+            "python", str(datalake_dir / "builders" / "memo_portfolio_evaluator.py"),
+            "--tournament-id", tournament_id,
+            "--comparison-group", grp,
+            "--start-date", "2024-01-02",
+            "--end-date", "2024-03-29",
+            "--symbols", "AAPL", "AMZN", "GOOGL",
+            "--data-dir", data_dir,
+            "--include-buy-and-hold"
+        ]
+        subprocess.run(cmd, check=True)
+
+    # Run lesson manager to seed Arm B and C
+    # Arm C empty
+    subprocess.run([
+        "python", str(datalake_dir / "builders" / "memo_weekly_lesson_manager.py"),
+        "--memory-bank-version", "mb_q1_2024_weekly_only_v1",
+        "--init-empty-memory-bank",
+        "--data-dir", data_dir
+    ], check=True)
+
+    # Arm C Week 1
+    subprocess.run([
+        "python", str(datalake_dir / "builders" / "memo_weekly_lesson_manager.py"),
+        "--tournament-id", tournament_id,
+        "--comparison-group", "test_q1_2024_weekly_learning_only",
+        "--memory-bank-version", "mb_q1_2024_weekly_only_v1",
+        "--week-start", "2024-01-02",
+        "--week-end", "2024-01-05",
+        "--data-dir", data_dir
+    ], check=True)
+
+    # Arm B Week 1
+    subprocess.run([
+        "python", str(datalake_dir / "builders" / "memo_weekly_lesson_manager.py"),
+        "--tournament-id", tournament_id,
+        "--comparison-group", "test_q1_2024_2022_memory_weekly_learning",
+        "--memory-bank-version", "mb_q1_2024_2022_memory_weekly_learning_v1",
+        "--seed-memory-bank-version", "mb_2022_full_highvar_trueskill_socialproxy_llm_v1",
+        "--week-start", "2024-01-02",
+        "--week-end", "2024-01-05",
+        "--data-dir", data_dir
+    ], check=True)
+
+    report_dir = datalake_dir / "reports"
+    os.makedirs(report_dir, exist_ok=True)
+    with open(report_dir / "q1_2024_portfolio_evaluation_report.md", "w") as f:
+        f.write("# Q1 2024 Portfolio Evaluation Report\n\nGenerated by mock pipeline.")
+
+    print("\nRunning contract test...")
+    subprocess.run([
+        "python", str(datalake_dir / "tools" / "contracts" / "test_memo_portfolio_evaluation_contract.py"),
+        "--data-dir", data_dir,
+        "--tournament-id", tournament_id,
+        "--start-date", "2024-01-02",
+        "--end-date", "2024-03-29",
+        "--symbols", "AAPL", "AMZN", "GOOGL"
+    ], check=False)
+
+if __name__ == "__main__":
+    main()
