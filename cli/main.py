@@ -64,7 +64,7 @@ class MessageBuffer:
         "social": "Sentiment Analyst",
         "news": "News Analyst",
         "fundamentals": "Fundamentals Analyst",
-        "quantitative": "Quantitative Analyst",
+        "quantitative": "Regime Analyst",
     }
 
     # Report section mapping: section -> (analyst_key for filtering, finalizing_agent)
@@ -75,7 +75,7 @@ class MessageBuffer:
         "sentiment_report": ("social", "Sentiment Analyst"),
         "news_report": ("news", "News Analyst"),
         "fundamentals_report": ("fundamentals", "Fundamentals Analyst"),
-        "quantitative_report": ("quantitative", "Quantitative Analyst"),
+        "regime_report": ("quantitative", "Regime Analyst"),
         "investment_plan": (None, "Research Manager"),
         "trader_investment_plan": (None, "Trader"),
         "final_trade_decision": (None, "Portfolio Manager"),
@@ -184,7 +184,7 @@ class MessageBuffer:
                 "sentiment_report": "Social Sentiment",
                 "news_report": "News Analysis",
                 "fundamentals_report": "Fundamentals Analysis",
-                "quantitative_report": "Quantitative Analysis",
+                "regime_report": "Market Regime Analysis",
                 "investment_plan": "Research Team Decision",
                 "trader_investment_plan": "Trading Team Plan",
                 "final_trade_decision": "Portfolio Management Decision",
@@ -200,7 +200,13 @@ class MessageBuffer:
         report_parts = []
 
         # Analyst Team Reports - use .get() to handle missing sections
-        analyst_sections = ["market_report", "sentiment_report", "news_report", "fundamentals_report", "quantitative_report"]
+        analyst_sections = [
+            "market_report",
+            "sentiment_report",
+            "news_report",
+            "fundamentals_report",
+            "regime_report",
+        ]
         if any(self.report_sections.get(section) for section in analyst_sections):
             report_parts.append("## Analyst Team Reports")
             if self.report_sections.get("market_report"):
@@ -219,9 +225,9 @@ class MessageBuffer:
                 report_parts.append(
                     f"### Fundamentals Analysis\n{self.report_sections['fundamentals_report']}"
                 )
-            if self.report_sections.get("quantitative_report"):
+            if self.report_sections.get("regime_report"):
                 report_parts.append(
-                    f"### Quantitative Analysis\n{self.report_sections['quantitative_report']}"
+                    f"### Market Regime Analysis\n{self.report_sections['regime_report']}"
                 )
 
         # Research Team Reports
@@ -302,7 +308,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             "Sentiment Analyst",
             "News Analyst",
             "Fundamentals Analyst",
-            "Quantitative Analyst",
+            "Regime Analyst",
         ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
         "Trading Team": ["Trader"],
@@ -731,10 +737,10 @@ def save_report_to_disk(final_state, ticker: str, save_path: Path):
         analysts_dir.mkdir(exist_ok=True)
         (analysts_dir / "fundamentals.md").write_text(final_state["fundamentals_report"], encoding="utf-8")
         analyst_parts.append(("Fundamentals Analyst", final_state["fundamentals_report"]))
-    if final_state.get("quantitative_report"):
+    if final_state.get("regime_report"):
         analysts_dir.mkdir(exist_ok=True)
-        (analysts_dir / "quantitative.md").write_text(final_state["quantitative_report"], encoding="utf-8")
-        analyst_parts.append(("Quantitative Analyst", final_state["quantitative_report"]))
+        (analysts_dir / "regime.md").write_text(final_state["regime_report"], encoding="utf-8")
+        analyst_parts.append(("Regime Analyst", final_state["regime_report"]))
     if analyst_parts:
         content = "\n\n".join(f"### {name}\n{text}" for name, text in analyst_parts)
         sections.append(f"## I. Analyst Team Reports\n\n{content}")
@@ -816,8 +822,8 @@ def display_complete_report(final_state):
         analysts.append(("News Analyst", final_state["news_report"]))
     if final_state.get("fundamentals_report"):
         analysts.append(("Fundamentals Analyst", final_state["fundamentals_report"]))
-    if final_state.get("quantitative_report"):
-        analysts.append(("Quantitative Analyst", final_state["quantitative_report"]))
+    if final_state.get("regime_report"):
+        analysts.append(("Regime Analyst", final_state["regime_report"]))
     if analysts:
         console.print(Panel("[bold]I. Analyst Team Reports[/bold]", border_style="cyan"))
         for title, content in analysts:
@@ -878,14 +884,14 @@ ANALYST_AGENT_NAMES = {
     "social": "Sentiment Analyst",
     "news": "News Analyst",
     "fundamentals": "Fundamentals Analyst",
-    "quantitative": "Quantitative Analyst",
+    "quantitative": "Regime Analyst",
 }
 ANALYST_REPORT_MAP = {
     "market": "market_report",
     "social": "sentiment_report",
     "news": "news_report",
     "fundamentals": "fundamentals_report",
-    "quantitative": "quantitative_report",
+    "quantitative": "regime_report",
 }
 
 

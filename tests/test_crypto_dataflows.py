@@ -14,11 +14,9 @@ from tradingagents.dataflows.y_finance import (
 )
 from tradingagents.dataflows.stockstats_utils import StockstatsUtils
 from tradingagents.dataflows.quantitative_models import (
-    preprocess_features,
-    scale_features,
-    prepare_sequences,
-    get_anomaly_signals,
-    get_trend_predictions,
+    preprocess_regime_features,
+    run_market_regime_detection,
+    get_market_regime,
 )
 
 
@@ -94,10 +92,10 @@ class TestCryptoDataflowBehavior:
 
 
 @pytest.mark.unit
-class TestTensorFlowQuantitativePipeline:
-    """Verifies preprocessing and TensorFlow pipeline execution."""
+class TestTensorFlowRegimePipeline:
+    """Verifies preprocessing and TensorFlow HMM regime detection."""
 
-    def _generate_mock_ohlcv(self, length=40):
+    def _generate_mock_ohlcv(self, length=80):
         """Helper to create fake sequential OHLCV data."""
         np.random.seed(42)
         dates = pd.date_range(start="2026-01-01", periods=length, freq="D")
@@ -112,53 +110,49 @@ class TestTensorFlowQuantitativePipeline:
         })
         return df
 
-    def test_preprocessing_and_scaling(self):
-        """Verify features are engineered and scaled correctly."""
+    def test_regime_feature_engineering(self):
+        """Verify regime features are engineered correctly."""
         df = self._generate_mock_ohlcv()
-        processed = preprocess_features(df)
-        
-        # Check required features exist
-        for col in ['log_ret', 'hl_vol', 'vol_ratio', 'ret_std']:
+        processed = preprocess_regime_features(df)
+
+        for col in [
+            "log_return_1d",
+            "log_return_5d",
+            "volatility_20d",
+            "trend_slope_20d",
+            "distance_sma20",
+            "drawdown_20d",
+            "volume_zscore",
+            "range_pct",
+        ]:
             assert col in processed.columns
-            
-        scaled = scale_features(processed)
-        assert scaled.shape[0] == processed.shape[0]
-        assert scaled.shape[1] == 4
-        assert np.min(scaled) >= 0.0
-        assert np.max(scaled) <= 1.0
 
-        sequences = prepare_sequences(scaled, window_size=10)
-        assert len(sequences) == len(scaled) - 10 + 1
-        assert sequences.shape[1] == 10
-        assert sequences.shape[2] == 4
+        assert len(processed) > 25
+        assert processed.isna().sum().sum() == 0
 
     @patch("tradingagents.dataflows.quantitative_models.load_ohlcv")
-    def test_anomaly_detection_tool(self, mock_load):
-        """Verify anomaly tool runs successfully and returns markdown analysis."""
-        df = self._generate_mock_ohlcv(length=50)
+    def test_regime_detection_runs(self, mock_load):
+        """Verify TensorFlow HMM regime detection returns a structured result."""
+        df = self._generate_mock_ohlcv(length=80)
         mock_load.return_value = df
 
-        report = get_anomaly_signals("BTC-USD", "2026-01-30", look_back_days=15)
-        
-        assert "### [TensorFlow Anomaly Detection Report for BTC-USD]" in report
-        assert "| Metric | Value |" in report
-        assert "Reconstruction MSE" in report
-        # Check fallback statement is NOT present (meaning model ran successfully)
-        assert "Fallback warning" not in report
+        result = run_market_regime_detection("BTC-USD", "2026-03-15", look_back_days=30)
+
+        assert result["status"] == "success"
+        assert result["current_regime"] in {"Bull", "Bear", "Sideway"}
+        assert 0.0 <= result["confidence"] <= 1.0
+        assert len(result["recent_states"]) <= 5
 
     @patch("tradingagents.dataflows.quantitative_models.load_ohlcv")
-    def test_trend_forecasting_tool(self, mock_load):
-        """Verify trend forecasting tool runs successfully and returns predictions."""
-        df = self._generate_mock_ohlcv(length=50)
+    def test_market_regime_tool_report(self, mock_load):
+        """Verify market regime tool returns a markdown report for agents."""
+        df = self._generate_mock_ohlcv(length=80)
         mock_load.return_value = df
 
-        report = get_trend_predictions("BTC-USD", "2026-01-30", look_back_days=15)
-        
-        assert "### [TensorFlow Price Trend Forecast for BTC-USD]" in report
-        assert "| Parameter | Prediction Value |" in report
-        assert "Forecasted Direction" in report
-        # Check that we have probabilities listed
-        assert "Probability: UP" in report
-        assert "Probability: HOLD" in report
-        assert "Probability: DOWN" in report
-        assert "Fallback warning" not in report
+        report = get_market_regime("BTC-USD", "2026-03-15", look_back_days=30)
+
+        assert "### [TensorFlow HMM Market Regime Report for BTC-USD]" in report
+        assert "Current Regime" in report
+        assert "Risk Condition" in report
+        assert "Bull" in report or "Bear" in report or "Sideway" in report
+

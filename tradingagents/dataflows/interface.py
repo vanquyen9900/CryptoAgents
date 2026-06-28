@@ -11,7 +11,7 @@ from .y_finance import (
     get_insider_transactions as get_yfinance_insider_transactions,
 )
 from .yfinance_news import get_news_yfinance, get_global_news_yfinance
-from .quantitative_models import get_anomaly_signals, get_trend_predictions
+from .quantitative_models import get_market_regime
 from .alpha_vantage import (
     get_stock as get_alpha_vantage_stock,
     get_indicator as get_alpha_vantage_indicator,
@@ -60,10 +60,9 @@ TOOLS_CATEGORIES = {
         ]
     },
     "quantitative_analysis": {
-        "description": "TensorFlow deep learning quantitative analytics",
+        "description": "TensorFlow HMM market regime detection",
         "tools": [
-            "get_anomaly_signals",
-            "get_trend_predictions"
+            "get_market_regime"
         ]
     }
 }
@@ -116,11 +115,8 @@ VENDOR_METHODS = {
         "yfinance": get_yfinance_insider_transactions,
     },
     # quantitative_analysis
-    "get_anomaly_signals": {
-        "yfinance": get_anomaly_signals,
-    },
-    "get_trend_predictions": {
-        "yfinance": get_trend_predictions,
+    "get_market_regime": {
+        "yfinance": get_market_regime,
     },
 }
 

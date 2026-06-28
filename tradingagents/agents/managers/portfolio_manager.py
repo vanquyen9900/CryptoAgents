@@ -38,6 +38,15 @@ def create_portfolio_manager(llm):
             if past_context
             else ""
         )
+        portfolio_context = state.get("portfolio_context", "")
+        portfolio_line = (
+            f"- Current portfolio state for this decision:\n{portfolio_context}\n"
+            "Use this state to set a concrete target_weight_pct between 0 and 100 for the instrument. "
+            "If reducing risk, lower the target weight; if adding risk, raise it. "
+            "If no change is warranted, keep the target close to the current weight.\n"
+            if portfolio_context
+            else ""
+        )
 
         prompt = f"""As the Portfolio Manager, synthesize the risk analysts' debate and deliver the final trading decision.
 
@@ -56,6 +65,7 @@ def create_portfolio_manager(llm):
 - Research Manager's investment plan: **{research_plan}**
 - Trader's transaction proposal: **{trader_plan}**
 {lessons_line}
+{portfolio_line}
 **Risk Analysts Debate History:**
 {history}
 

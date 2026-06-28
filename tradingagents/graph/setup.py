@@ -40,7 +40,7 @@ class GraphSetup:
                 - "social": Social/Sentiment media analyst
                 - "news": News analyst
                 - "fundamentals": Fundamentals analyst (stocks)
-                - "quantitative": Quantitative & On-Chain analyst (crypto, TensorFlow)
+                - "quantitative": Regime analyst (TensorFlow HMM current market regime)
         """
         plan = build_analyst_execution_plan(
             selected_analysts,
@@ -52,7 +52,7 @@ class GraphSetup:
             "social": lambda: create_sentiment_analyst(self.quick_thinking_llm),
             "news": lambda: create_news_analyst(self.quick_thinking_llm),
             "fundamentals": lambda: create_fundamentals_analyst(self.quick_thinking_llm),
-            "quantitative": lambda: create_quantitative_analyst(self.quick_thinking_llm),
+            "quantitative": lambda: create_regime_analyst(self.quick_thinking_llm),
         }
 
         # Create researcher and manager nodes
