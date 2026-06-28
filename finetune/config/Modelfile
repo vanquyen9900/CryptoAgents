@@ -1,0 +1,25 @@
+# Modelfile for Sentiment Analyst Fine-Tuned Model (Qwen3:4B QLoRA)
+# Build command:
+#   ollama create sentiment-analyst-ft -f finetune/config/Modelfile
+
+FROM ../models/gguf_gguf/qwen3-4b.Q4_K_M-001.gguf
+
+# Hyperparameters
+PARAMETER temperature 0.2
+PARAMETER top_p 0.95
+PARAMETER repeat_penalty 1.1
+
+# Stop sequences for ChatML / Qwen format
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+
+# ChatML Template
+TEMPLATE """<|im_start|>system
+{{ .System }}<|im_end|>
+<|im_start|>user
+{{ .Prompt }}<|im_end|>
+<|im_start|>assistant
+{{ .Response }}<|im_end|>"""
+
+# System message override is not set here because it is generated dynamically by the agent.

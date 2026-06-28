@@ -222,3 +222,6 @@ __marimo__/
 reports/
 !MemoAdapt/reports/
 !MemoAdapt/reports/**
+
+# Temporary A/B benchmark workspaces
+.regime-benchmark-*/

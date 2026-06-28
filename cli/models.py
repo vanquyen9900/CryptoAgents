@@ -10,6 +10,7 @@ class AnalystType(str, Enum):
     SOCIAL = "social"
     NEWS = "news"
     FUNDAMENTALS = "fundamentals"
+    # Wire value stays "quantitative" for graph compatibility; user-facing label is Regime Analyst.
     QUANTITATIVE = "quantitative"
 
 

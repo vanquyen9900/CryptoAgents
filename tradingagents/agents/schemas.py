@@ -200,6 +200,15 @@ class PortfolioDecision(BaseModel):
         default=None,
         description="Optional target price in the instrument's quote currency.",
     )
+    target_weight_pct: Optional[float] = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description=(
+            "Optional target portfolio weight for this instrument, from 0 to 100 percent. "
+            "Use this when portfolio context is provided."
+        ),
+    )
     time_horizon: Optional[str] = Field(
         default=None,
         description="Optional recommended holding period, e.g. '3-6 months'.",
@@ -223,6 +232,8 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
     ]
     if decision.price_target is not None:
         parts.extend(["", f"**Price Target**: {decision.price_target}"])
+    if decision.target_weight_pct is not None:
+        parts.extend(["", f"**Target Weight**: {decision.target_weight_pct:.2f}%"])
     if decision.time_horizon:
         parts.extend(["", f"**Time Horizon**: {decision.time_horizon}"])
     return "\n".join(parts)

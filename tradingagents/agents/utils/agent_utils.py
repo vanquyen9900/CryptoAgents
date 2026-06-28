@@ -19,8 +19,7 @@ from tradingagents.agents.utils.news_data_tools import (
     get_global_news
 )
 from tradingagents.agents.utils.quantitative_analysis_tools import (
-    get_anomaly_signals,
-    get_trend_predictions,
+    get_market_regime,
 )
 
 
