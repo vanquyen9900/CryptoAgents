@@ -15,6 +15,10 @@ class InvestDebateState(TypedDict):
     current_response: Annotated[str, "Latest response"]  # Last response
     judge_decision: Annotated[str, "Final judge decision"]  # Last response
     count: Annotated[int, "Length of the current conversation"]  # Conversation length
+    # D — Adaptive Debate (report §3.5): self-reported confidence scores C ∈ [0, 1]
+    # Parse error fallback → 0.5 (neutral, avoids breaking the loop)
+    bull_confidence: Annotated[float, "Bull researcher confidence score [0,1] from latest argument"]
+    bear_confidence: Annotated[float, "Bear researcher confidence score [0,1] from latest argument"]
 
 
 # Risk management team state

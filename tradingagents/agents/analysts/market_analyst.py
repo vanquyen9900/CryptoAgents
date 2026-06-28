@@ -5,7 +5,29 @@ from tradingagents.agents.utils.agent_utils import (
     get_language_instruction,
     get_stock_data,
 )
+from tradingagents.agents.utils.crypto_indicator_tools import get_crypto_indicators
 from tradingagents.dataflows.config import get_config
+
+
+# Crypto-specific system message extension (Trụ cột D — Crypto Indicators, report §3.5)
+_CRYPTO_SYSTEM_EXTENSION = """
+
+**Crypto-native Indicators (MANDATORY for crypto assets)**:
+You have access to `get_crypto_indicators` — call it ONCE after retrieving price data.
+It returns four signals critical for crypto analysis:
+- **FNG (Fear & Greed Index)**: Sentiment extremes (<15 Extreme Fear, >85 Extreme Greed) are
+  contrarian signals. Use alongside price action to gauge crowd positioning.
+- **DOM (Bitcoin Dominance %)**: High dominance (>55%) favours BTC over altcoins; low (<45%)
+  signals altcoin season and elevated risk appetite.
+- **FR (Funding Rate)**: Positive rate = longs paying shorts (bullish crowding); negative = shorts
+  paying longs (bearish crowding). Rates >0.05% or <-0.05% indicate extreme positioning.
+- **OI (Open Interest USD)**: Rising OI with price confirms trend; rising OI against price warns
+  of potential liquidation cascade.
+- **Squeeze Risk**: If the tool flags a long/short-squeeze risk, explicitly discuss it in your
+  report and explain its implications for the current trade setup.
+
+Integrate these crypto-native signals with traditional technical indicators to form a holistic view.
+"""
 
 
 def create_market_analyst(llm):
@@ -17,10 +39,12 @@ def create_market_analyst(llm):
             state["company_of_interest"], asset_type
         )
 
-        tools = [
-            get_stock_data,
-            get_indicators,
-        ]
+        # D-Crypto: inject crypto tool only for crypto assets
+        tools = [get_stock_data, get_indicators]
+        crypto_extension = ""
+        if asset_type == "crypto":
+            tools = [get_stock_data, get_indicators, get_crypto_indicators]
+            crypto_extension = _CRYPTO_SYSTEM_EXTENSION
 
         system_message = (
             """You are a trading assistant tasked with analyzing financial markets. Your role is to select the **most relevant indicators** for a given market condition or trading strategy from the following list. The goal is to choose up to **8 indicators** that provide complementary insights without redundancy. Categories and each category's indicators are:
@@ -48,6 +72,7 @@ Volume-Based Indicators:
 - vwma: VWMA: A moving average weighted by volume. Usage: Confirm trends by integrating price action with volume data. Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses.
 
 - Select indicators that provide diverse and complementary information. Avoid redundancy (e.g., do not select both rsi and stochrsi). Also briefly explain why they are suitable for the given market context. When you tool call, please use the exact name of the indicators provided above as they are defined parameters, otherwise your call will fail. Please make sure to call get_stock_data first to retrieve the CSV that is needed to generate indicators. Then use get_indicators with the specific indicator names. Write a very detailed and nuanced report of the trends you observe. Provide specific, actionable insights with supporting evidence to help traders make informed decisions."""
+            + crypto_extension
             + """ Make sure to append a Markdown table at the end of the report to organize key points in the report, organized and easy to read."""
             + get_language_instruction()
         )

@@ -78,6 +78,17 @@ DEFAULT_CONFIG = _apply_env_overrides({
     "max_risk_discuss_rounds": 1,
     "max_recur_limit": 100,
     "analyst_concurrency_limit": 1,
+    # D — Adaptive Debate (report §3.5)
+    # Consensus threshold θ: debate stops when S_k = 1 − |C_bull − C_bear| ≥ θ
+    "adaptive_debate_theta": 0.75,
+    # Hard ceiling on debate rounds (K_max); total turns = 2 × K_max
+    "adaptive_debate_k_max": 3,
+    # C2 — Regime-aware Vector Retrieval (report §3.4)
+    # Set to True to enable ChromaDB + sentence-transformers retrieval (replaces FIFO).
+    # Requires: pip install chromadb sentence-transformers
+    "vector_memory_enabled": False,
+    "vector_memory_collection": "trading_memory",
+    "vector_memory_top_k": 3,
     # News / data fetching parameters
     # Increase for longer lookback strategies or to broaden macro coverage;
     # decrease to reduce token usage in agent prompts.

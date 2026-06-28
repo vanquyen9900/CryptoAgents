@@ -6,6 +6,13 @@ import re
 
 from tradingagents.agents.utils.rating import parse_rating
 
+# C2 — Vector Retrieval (report §3.4) — optional import
+try:
+    from tradingagents.agents.utils.vector_memory import RegimeAwareVectorMemory
+    _VECTOR_MEMORY_CLASS = RegimeAwareVectorMemory
+except ImportError:
+    _VECTOR_MEMORY_CLASS = None
+
 
 class TradingMemoryLog:
     """Append-only markdown log of trading decisions and reflections."""
@@ -25,6 +32,21 @@ class TradingMemoryLog:
             self._log_path.parent.mkdir(parents=True, exist_ok=True)
         # Optional cap on resolved entries. None disables rotation.
         self._max_entries = cfg.get("memory_log_max_entries")
+
+        # C2 — Vector Retrieval: initialise if enabled and available
+        self._vector_memory: Optional[RegimeAwareVectorMemory] = None  # type: ignore[type-arg]
+        if cfg.get("vector_memory_enabled") and _VECTOR_MEMORY_CLASS is not None:
+            import os
+            persist_dir = cfg.get(
+                "vector_memory_dir",
+                str(Path(cfg.get("data_cache_dir", "~/.cryptoagents/cache")).expanduser() / "vector_memory"),
+            )
+            os.makedirs(persist_dir, exist_ok=True)
+            self._vector_memory = _VECTOR_MEMORY_CLASS(
+                persist_directory=persist_dir,
+                collection_name=cfg.get("vector_memory_collection", "trading_memory"),
+                top_k=cfg.get("vector_memory_top_k", 3),
+            )
 
     # --- Write path (Phase A) ---
 
@@ -68,8 +90,33 @@ class TradingMemoryLog:
         """Return entries with outcome:pending (for Phase B)."""
         return [e for e in self.load_entries() if e.get("pending")]
 
-    def get_past_context(self, ticker: str, n_same: int = 5, n_cross: int = 3) -> str:
-        """Return formatted past context string for agent prompt injection."""
+    def get_past_context(self, ticker: str, n_same: int = 5, n_cross: int = 3, regime: str = "") -> str:
+        """Return formatted past context string for agent prompt injection.
+
+        C2 upgrade: when vector memory is enabled and regime is provided,
+        retrieves the top-k regime-matched memories via cosine similarity
+        instead of the legacy FIFO approach.
+
+        Args:
+            ticker: Asset symbol.
+            n_same: Max same-ticker entries (FIFO path only).
+            n_cross: Max cross-ticker entries (FIFO path only).
+            regime: Current HMM regime label ("Bull"/"Bear"/"Sideway").
+                    If non-empty and vector memory is enabled, activates C2 path.
+        """
+        # ── C2 path: vector retrieval ──────────────────────────────────
+        if self._vector_memory is not None and regime and self._vector_memory.available:
+            query = f"Trading decision for {ticker} in {regime} regime"
+            memories = self._vector_memory.retrieve(
+                ticker=ticker,
+                regime=regime,
+                query_text=query,
+            )
+            if memories:
+                return self._vector_memory.format_for_prompt(memories)
+            # Fall through to FIFO if vector store is empty (first runs)
+
+        # ── Legacy FIFO path ───────────────────────────────────────────
         entries = [e for e in self.load_entries() if not e.get("pending")]
         if not entries:
             return ""
@@ -215,6 +262,28 @@ class TradingMemoryLog:
         tmp_path = self._log_path.with_suffix(".tmp")
         tmp_path.write_text(new_text, encoding="utf-8")
         tmp_path.replace(self._log_path)
+
+        # C2 — Vector Retrieval: upsert resolved reflections into ChromaDB
+        if self._vector_memory is not None and self._vector_memory.available:
+            import hashlib
+            for upd in updates:
+                if not upd.get("reflection"):
+                    continue
+                # regime provided by trading_graph._resolve_pending_entries via upd dict
+                regime = upd.get("regime", "Sideway")
+                entry_id = hashlib.md5(
+                    f"{upd['trade_date']}|{upd['ticker']}".encode()
+                ).hexdigest()
+                self._vector_memory.add_entry(
+                    entry_id=entry_id,
+                    ticker=upd["ticker"],
+                    regime=regime,
+                    reflection=upd["reflection"],
+                    trade_date=upd["trade_date"],
+                    rating=upd.get("rating", ""),
+                    raw_return=upd.get("raw_return"),
+                    alpha_return=upd.get("alpha_return"),
+                )
 
     # --- Helpers ---
 

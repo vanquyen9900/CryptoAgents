@@ -39,6 +39,8 @@ from tradingagents.agents.utils.agent_utils import (
     get_global_news,
     get_market_regime,
 )
+# D-Crypto: crypto-native indicator tool
+from tradingagents.agents.utils.crypto_indicator_tools import get_crypto_indicators
 
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
 from .conditional_logic import ConditionalLogic
@@ -109,6 +111,9 @@ class TradingAgentsGraph:
         self.conditional_logic = ConditionalLogic(
             max_debate_rounds=self.config["max_debate_rounds"],
             max_risk_discuss_rounds=self.config["max_risk_discuss_rounds"],
+            # D — Adaptive Debate params from config (report §3.5)
+            adaptive_debate_theta=self.config.get("adaptive_debate_theta", 0.75),
+            adaptive_debate_k_max=self.config.get("adaptive_debate_k_max", 3),
         )
         self.graph_setup = GraphSetup(
             self.quick_thinking_llm,
@@ -165,6 +170,9 @@ class TradingAgentsGraph:
                     get_stock_data,
                     # Technical indicators
                     get_indicators,
+                    # D-Crypto: crypto-native indicators (tool is no-op for stocks;
+                    # Market Analyst only calls it when asset_type=='crypto')
+                    get_crypto_indicators,
                 ]
             ),
             "social": ToolNode(
@@ -360,7 +368,11 @@ class TradingAgentsGraph:
     ):
         """Execute the graph and write the resulting state to disk and memory log."""
         # Initialize state — inject memory log context for PM.
-        past_context = self.memory_log.get_past_context(company_name)
+        # C2: pass regime label so get_past_context() can use vector retrieval
+        # Regime comes from the previous run's cached HMM result if available;
+        # on the very first run regime is empty and FIFO is used as fallback.
+        regime = getattr(self, "_last_regime", "")
+        past_context = self.memory_log.get_past_context(company_name, regime=regime)
         init_agent_state = self.propagator.create_initial_state(
             company_name,
             trade_date,
@@ -393,6 +405,16 @@ class TradingAgentsGraph:
 
         # Store current state for reflection.
         self.curr_state = final_state
+
+        # C2: cache the HMM regime from this run so the NEXT run's get_past_context
+        # can do vector retrieval with the correct regime filter.
+        regime_report = final_state.get("regime_report", "")
+        if "Bull" in regime_report:
+            self._last_regime = "Bull"
+        elif "Bear" in regime_report:
+            self._last_regime = "Bear"
+        else:
+            self._last_regime = "Sideway"
 
         # Log state to disk.
         self._log_state(trade_date, final_state)

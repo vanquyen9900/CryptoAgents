@@ -1,4 +1,21 @@
+import re
 from tradingagents.agents.utils.agent_utils import get_language_instruction
+
+
+def _parse_confidence(text: str) -> float:
+    """Extract the last CONFIDENCE: X.XX value from the LLM output.
+
+    Returns 0.5 (neutral) on any parse failure so the debate loop
+    never crashes due to a malformed response (report §3.5 spec).
+    """
+    matches = re.findall(r"CONFIDENCE:\s*([0-9]*\.?[0-9]+)", text, re.IGNORECASE)
+    if not matches:
+        return 0.5
+    try:
+        value = float(matches[-1])
+        return max(0.0, min(1.0, value))
+    except ValueError:
+        return 0.5
 
 
 def create_bull_researcher(llm):
@@ -43,11 +60,19 @@ Latest world affairs news: {news_report}
 Conversation history of the debate: {history}
 Last bear argument: {current_response}
 Use this information to deliver a compelling bull argument, refute the bear's concerns, and engage in a dynamic debate that demonstrates the strengths of the bull position.
+
+After your argument, on its own line, write your confidence score in this exact format:
+CONFIDENCE: <value between 0.00 and 1.00>
+Where 1.00 = absolute conviction to buy, 0.50 = neutral/uncertain, 0.00 = no conviction.
 """ + get_language_instruction()
 
         response = llm.invoke(prompt)
+        raw_content = response.content
 
-        argument = f"Bull Analyst: {response.content}"
+        # D — Adaptive Debate: parse confidence score (report §3.5)
+        bull_confidence = _parse_confidence(raw_content)
+
+        argument = f"Bull Analyst: {raw_content}"
 
         new_investment_debate_state = {
             "history": history + "\n" + argument,
@@ -55,6 +80,8 @@ Use this information to deliver a compelling bull argument, refute the bear's co
             "bear_history": investment_debate_state.get("bear_history", ""),
             "current_response": argument,
             "count": investment_debate_state["count"] + 1,
+            "bull_confidence": bull_confidence,
+            "bear_confidence": investment_debate_state.get("bear_confidence", 0.5),
         }
 
         return {"investment_debate_state": new_investment_debate_state}
