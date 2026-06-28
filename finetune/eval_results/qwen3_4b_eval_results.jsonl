@@ -1,0 +1,2 @@
+{"model_name": "qwen3:4b", "test_example_id": 1300, "ticker": "RBLX", "trade_date": "2026-04-14", "latency_ms": 26336, "structure_score": 1.0, "rouge1_f": 0.5426356589147285, "sentiment_match": 0, "judge_scores": null}
+{"model_name": "qwen3:4b", "test_example_id": 1301, "ticker": "NET", "trade_date": "2026-05-19", "latency_ms": 39302, "structure_score": 1.0, "rouge1_f": 0.4968833481745325, "sentiment_match": 1, "judge_scores": null}
